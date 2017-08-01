@@ -1,7 +1,7 @@
 ## 搭建iTop4412使用的 NFS 环境
 
 ## 1. 配置宿主机
-将 nfs 挂载点中提前拷贝好rootfs；然后编辑在`/etc/exports`文件，添加下面一行：
+将 nfs 挂载点中提前拷贝好rootfs；然后编辑`/etc/exports`文件，添加下面一行：
 
 ```
 /home/ldd/source/nfs/rootfs  *(rw,sync,no_subtree_check,no_root_squash)
