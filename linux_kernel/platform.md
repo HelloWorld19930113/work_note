@@ -1,8 +1,9 @@
 # linux platform 驱动模型分析
 
-[TOC]
+> 本文中使用的linux 内核版本是3.0.15。
 
 ## 一. 概述
+
   platform设备和驱动与linux设备模型密切相关。platform在linux设备模型中，其实就是一种虚拟总线没有对应的硬件结构。它的主要作用就是管理系统的外设资源，比如io内存,中断信号线。现在大多数处理器芯片都是soc，如s3c2440，它包括处理器内核（arm920t）和系统的外设（lcd接口，nandflash接口等）。linux在引入了platform机制之后，内核假设所有的这些外设都挂载在platform虚拟总线上,以便进行统一管理。
     
 ## 二. platform 总线
@@ -144,7 +145,7 @@ int platform_device_add(struct platform_device *pdev)
     pr_debug("Registering platform device '%s'. Parent at %s\n",  
          dev_name(&pdev->dev), dev_name(pdev->dev.parent));  
   
-    ret = device_add(&pdev->dev);     //注册到设备模型中  
+    ret = device_add(&pdev->dev);     // 注册到设备模型中  
     if (ret == 0)  
         return ret;  
 failed:  
@@ -157,11 +158,21 @@ failed:
     return ret;  
 }  
 ```
+ 在函数的最后调用了 `device_add`函数注册设备模型，这个函数调用完毕之后，`platform设备`就已经存在于内核中了，它就会在内核中默默等待与属于它的`platform驱动`相匹配。设备是和设备树有关的，设备树在系统初始化阶段就已经被解析过了；而platform驱动可能在系统启动之后的某个时刻才会加载。因此，在platform机制中，一般是platform设备在等待platform驱动。
 
 ### 3. mini2440内核注册platform设备过程
   因为一种soc确定之后，其外设模块就已经确定了，所以注册`platform设备`就由板级初始化代码来完成，在`mini2440`中是`mach-mini2440.c`的`mini2440_machine_init函数`中调用` platform_add_devices(mini2440_devices, ARRAY_SIZE(mini2440_devices))`来完成注册。这个函数完成mini2440的所有platform设备的注册：
 
-(1) platform_add_devices函数是platform_device_register的简单封装，它向内核注册一组platform设备
+```cpp
+static void __init mini2440_init(void)
+{
+    ... 
+    platform_add_devices(mini2440_devices, ARRAY_SIZE(mini2440_devices));
+    ...
+}
+```
+
+(1) `platform_add_devices函数`是`platform_device_register`的简单封装，它向内核注册一组`platform设备`。关于该函数之前已经进行过详细介绍。
 (2) mini2440_devices是一个platform_device指针数组，定义如下：
 
 ```cpp
@@ -213,6 +224,7 @@ static struct resource s3c_lcd_resource[] = {
 
    这是一个数组，有两个元素，说明lcd占用了系统两个资源，一个资源类型是`IORESOURCE_MEM`代表`io内存`，起使地址`S3C24XX_PA_LCD`，这个是`LCDCON1`寄存器的地址。另外一个资源是中断信号线。
 
+ 
 ## 四. platform设备驱动
   如果要将所写的驱动程序注册成`platform驱动`，那么所做的工作就是初始化一个`platform_driver`，然后调用`platform_driver_register`进行注册。
 
@@ -246,10 +258,10 @@ static struct platform_driver s3c2412fb_driver = {
 ```
  上面几个函数是我们要实现的，它将赋值给`device_driver`中的相关成员(稍后就可以看到)，`probe函数`是用来查询特定设备是否真正存在的函数。当设备从系统删除的时候调用`remove函数`。
 
-### 2. platform 驱动注册函数——__platform_driver_register
+### 2. platform 驱动注册函数——platform_driver_register
 
 ```cpp
-int __platform_driver_register(struct platform_driver *drv,
+int platform_driver_register(struct platform_driver *drv,
                 struct module *owner)
 {
     drv->driver.owner = owner;
@@ -262,7 +274,101 @@ int __platform_driver_register(struct platform_driver *drv,
 } 
 ```
 
-  这个函数首先使驱动属于`platform_bus_type总线`，将`platform_driver`结构中的定义的`probe，remove,shutdown`赋值给`device_driver`结构中的相应成员，以供`linux设备模型核心`调用，然后调用`driver_regster`将设备驱动注册到`linux设备模型核心`中。
+  这个函数首先使驱动属于`platform_bus_type总线`，将`platform_driver`结构中的定义的`probe，remove,shutdown`赋值给`device_driver`结构中的相应成员，以供`linux设备模型核心`调用，然后调用`driver_regster`将设备驱动注册到`linux设备模型核心`中。`driver_regster`会调用`bus_add_driver`将一个驱动添加到 `paltform总线` 上, `bus_add_driver`会调用`driver_attach`会将驱动绑定到匹配符合条件的设备上，下面是它的内部实现：
+
+```cpp
+int bus_for_each_dev(struct bus_type *bus, struct device *start,
+             void *data, int (*fn)(struct device *, void *))
+{
+    struct klist_iter i;
+    struct device *dev;
+    int error = 0;
+
+    if (!bus)
+        return -EINVAL;
+
+    klist_iter_init_node(&bus->p->klist_devices, &i,
+                 (start ? &start->p->knode_bus : NULL));   // 获取保存在bus中设备链表
+    while ((dev = next_device(&i)) && !error)     //调用__driver_attach()迭代匹配设备和驱动
+        error = fn(dev, data);
+    klist_iter_exit(&i);
+    return error;
+}
+```
+  可以看到，这个函数的核心是`error = fn(dev, data);`，而其中的`fn()`就是`__driver_attach()`。其具体定义如下：
+
+```cpp
+static int __driver_attach(struct device *dev, void *data)
+{
+    struct device_driver *drv = data;
+
+    if (!driver_match_device(drv, dev))
+        return 0;
+
+    if (dev->parent)    /* Needed for USB */
+        device_lock(dev->parent);
+    device_lock(dev);
+    if (!dev->driver)
+        driver_probe_device(drv, dev);   //尝试执行驱动的探测函数
+    device_unlock(dev);
+    if (dev->parent)
+        device_unlock(dev->parent);
+
+    return 0;
+}
+```
+ `driver_probe_device`函数会调用`really_probe`函数，在`really_probe`函数中
+
+```cpp
+static int really_probe(struct device *dev, struct device_driver *drv)
+{
+    int ret = 0;
+
+    dev->driver = drv;
+    if (driver_sysfs_add(dev)) {   // 将 platform 设备节点添加到/sys/devices/platform目录下
+        printk(KERN_ERR "%s: driver_sysfs_add(%s) failed\n",
+            __func__, dev_name(dev));
+        goto probe_failed;
+    }
+
+    if (dev->bus->probe) {
+        ret = dev->bus->probe(dev);    // 在这里就会执行 platform 驱动的probe函数。
+        if (ret)
+            goto probe_failed;
+    } else if (drv->probe) {
+        ret = drv->probe(dev);     // platform bus 的 platform 驱动的 probe函数是相同的。
+        if (ret)
+            goto probe_failed;
+    }
+
+    driver_bound(dev);        // 将设备驱动添加到驱动的设备列表中
+    ret = 1;
+
+    pr_debug("bus: '%s': %s: bound device %s to driver %s\n",
+         drv->bus->name, __func__, dev_name(dev), drv->name);
+    goto done;
+
+probe_failed:
+    devres_release_all(dev);
+    driver_sysfs_remove(dev);
+    dev->driver = NULL;
+
+    if (ret != -ENODEV && ret != -ENXIO) {
+        /* driver matched but the probe failed */
+        printk(KERN_WARNING
+               "%s: probe of %s failed with error %d\n",
+               drv->name, dev_name(dev), ret);
+    }
+
+    /* Ignore errors returned by ->probe so that the next driver can try its luck.*/
+    ret = 0;
+done:
+    atomic_dec(&probe_count);
+    wake_up(&probe_waitqueue);
+    return ret;
+}
+```
+ 到此，`platform_driver_register`函数就完成它的全部使命了。
 
 ## 五. 各环节的整合——真的是这样的吗？
   前面提到`mini2440`板级初始化程序将它所有的`platform设备`注册到了`linux设备模型核心`中，在`/sys/devices/platform目录`中都有相应的目录表示。`platform驱动`则是由各个驱动程序模块分别注册到系统中的。但是他们是如何联系起来的呢，这就跟linux设备模型核心有关系了。在`ldd3中的linux设备模型的各环节的整合`中有详细的论述。这里简要说明一下`platform实现`的方法。每当注册一个`platform驱动`的时候就会调用`driver_register`，这个函数的调用会遍历设备驱动所属总线上的所有设备，并对每个设备调用`总线的match函数`。`platform驱动`是属于`platform_bus_type总线`，所以调用`platform_match函数`。这个函数实现如下：
