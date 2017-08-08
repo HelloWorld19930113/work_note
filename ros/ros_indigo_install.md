@@ -1,7 +1,7 @@
-# ROS 环境搭建
+# ROS indigo 环境搭建
  
 ## 安装过程
-ROS Kinetic只支持Wily(15.10)和Xenial(16.04)对应内核分别为4.2和4.4，其他版本需要编译安装不支持直接deb软件源安装，
+ROS indigo不支持Wily(15.10)和Xenial(16.04)对应内核分别为4.2和4.4，其他版本需要编译安装不支持直接deb软件源安装，
 
 - 1. 使用下面命令添加软件下载源：
 
@@ -23,7 +23,7 @@ hkp://ha.pool.sks-keyservers.net:80
 
 ```bash
 $ sudo apt-get update
-$ sudo apt-get install ros-kinetic-desktop
+$ sudo apt-get install ros-indigo-desktop
 ```
 注意不要安装full版，Gazebo2不能与更新版本的Gazebo共存，需要单独安装所需功能包即可。
 然后，安装ros-gazebo接口库等，以7为例如下：
@@ -38,16 +38,16 @@ ros-indigo-gazebo7-ros
 
 安装功能包：
 ```bash
-$ sudo apt-get install ros-kinetic-PACKAGE
+$ sudo apt-get install ros-indigo-PACKAGE
 ```
 
 例如：
 ```bash
-$ sudo apt-get install ros-kinetic-slam-gmapping
+$ sudo apt-get install ros-indigo-slam-gmapping
 ```
-查找在kinetic中可以使用的功能包：
+查找在indigo中可以使用的功能包：
 ```bash
-$ apt-cache search ros-kinetic$ apt-cache search ros-kinetic
+$ apt-cache search ros-indigo$ apt-cache search ros-indigo
 ```
 
 - 4. 初始化
@@ -71,19 +71,19 @@ Add distro "groovy"
 Add distro "hydro"
 Add distro "indigo"
 Add distro "jade"
-Add distro "kinetic"
+Add distro "indigo"
 updated cache in /home/relaybot/.ros/rosdep/sources.cache
 
 - 5. 环境配置
 
 ```bash
-$ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+$ echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
-注意当安装多个ROS发行版，使用kinetic需要用到下面命令：
+注意当安装多个ROS发行版，使用indigo需要用到下面命令：
 
 ```bash
-$ source /opt/ros/kinetic/setup.bash
+$ source /opt/ros/indigo/setup.bash
 ```
 
 - 6. 安装rosinstall

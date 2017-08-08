@@ -1,0 +1,356 @@
+@(AM335x_RTEMS_Driver)
+
+[TOC]
+
+#  RTEMS 启动篇（二）
+ 上一篇分析了start.S的整体流程，对于最重要的系统函数的执行并没有深入展开分析，留在这一篇分析。
+ 
+## rtems_initialize_data_structures()系统函数
+
+我们从**`rtems_initialize_data_structures()`**函数开始。
+
+```cpp
+
+static void rtems_initialize_data_structures(void)
+{
+  /*
+   *  在初始化完成之前，任务调度和中断都是被禁用的。
+   *  这样可以防止系统运行环境初始化完成之前发生意外的上下文切换。
+   *
+   *  WARNING: boot_card()中已经将中断禁用
+   */
+
+  #if defined(RTEMS_MULTIPROCESSING)
+    /*
+     * 在多处理器 MP 配置中, 我们将单处理器系统视为特殊的多处理器系统
+     */
+    _Configuration_MP_table = rtems_configuration_get_user_multiprocessing_table();
+
+    if ( _Configuration_MP_table == NULL ) {
+      _Configuration_MP_table =
+	(void *)&_Initialization_Default_multiprocessing_table;
+    } else {
+      _System_state_Is_multiprocessing = true;
+    }
+  #endif
+
+  /*
+   * 尽可能早的初始化与目标架构相关的功能
+   */
+  _CPU_Initialize(); // 设置系统任务调度时的异常处理的优先级为最低
+
+  #if defined(RTEMS_MULTIPROCESSING)
+    _Objects_MP_Handler_early_initialization();
+  #endif
+
+  _Thread_Dispatch_initialization(); //设置任务调度的禁用level = 1
+
+  _User_extensions_Handler_initialization(); //初始化用户扩展函数
+  _ISR_Handler_initialization(); //其实最后什么都没做
+
+  /*
+   * Initialize the internal support API and allocator Mutex
+   */
+  _Objects_Information_table[OBJECTS_INTERNAL_API] = _Internal_Objects;
+
+  _API_Mutex_Initialization( 2 );  //API mutex 初始化
+  _API_Mutex_Allocate( &_RTEMS_Allocator_Mutex ); // Allocator_Mutex
+  _API_Mutex_Allocate( &_Once_Mutex );
+
+  _Watchdog_Handler_initialization();  // 看门狗处理函数初始化
+  _TOD_Handler_initialization();       //TimeOfDate 初始化
+
+  _Thread_Handler_initialization();
+
+  _Scheduler_Handler_initialization();
+
+  #if defined(RTEMS_MULTIPROCESSING)
+    _Objects_MP_Handler_initialization();
+    _MPCI_Handler_initialization( RTEMS_TIMEOUT );
+  #endif
+
+  _SMP_Handler_initialize();
+
+  _CPU_set_Handler_initialization();
+
+/* 管理器初始化 */
+
+  _RTEMS_API_Initialize(); // Import：这里将会添加用户扩展task——Init
+
+  _Extension_Manager_initialization();
+
+  _POSIX_API_Initialize();
+
+  _System_state_Set( SYSTEM_STATE_BEFORE_MULTITASKING );
+
+  /*
+   *  在这里之前不能创建任务!!!
+   *  _Thread_Executing 和 _Thread_Heir 都没有被设置.
+   *
+   * 此时所有的扩展 API 就都可用了，_Thread_Create_idle()执行之后，
+   * _Thread_Executing and _Thread_Heir 就会被设置.
+   */
+  _Thread_Create_idle();  //创建一个 IDLE task，即任务调度的起点task
+
+  /*
+   *  至此，只要使能了任务调度就可以正常任务调度了
+   */
+}
+
+```
+这里有两个比较关键的函数：
+
+### 1. _RTEMS_API_Initialize()函数； 
+ 该函数实现了所有`RTEMS`管理器的初始化；Tasks_Manager、Timer_Manager、Signal_Manager、Event_Manager、Message_queue_Manager、Semaphore_Manager、Partition_Manager、Region_Manager、Dual_ported_memory_Manager、Rate_monotonic_Manager、Barrier_Manager；
+
+其中与用户层的`Init()`函数相关的函数调用关系如下。
+
+```cpp
+_RTEMS_API_Initialize()->
+_RTEMS_tasks_Manager_initialization()->
+_API_extensions_Add( &_RTEMS_tasks_API_extensions )
+```
+
+重点分析`_RTEMS_tasks_Manager_initialization()`是为后面的`Init()`函数调用分析做准备；`_RTEMS_tasks_API_extensions`的定义如下：
+
+```cpp
+API_extensions_Control _RTEMS_tasks_API_extensions = {
+  .postdriver_hook = _RTEMS_tasks_Initialize_user_tasks
+};
+```
+
+其中，`_RTEMS_tasks_Initialize_user_tasks()`函数的定义如下：
+
+```cpp
+void _RTEMS_tasks_Initialize_user_tasks( void )
+{
+  if ( _RTEMS_tasks_Initialize_user_tasks_p )
+    (*_RTEMS_tasks_Initialize_user_tasks_p)();
+}
+
+```
+在`/src/cpukit/sapi/include/confdefs.h`文件中定义了`_RTEMS_tasks_Initialize_user_tasks_p`；其值为`_RTEMS_tasks_Initialize_user_tasks_body`；该函数的定义如下：
+
+```C
+void _RTEMS_tasks_Initialize_user_tasks_body( void )
+{
+	...
+    user_tasks = Configuration_RTEMS_API.User_initialization_tasks_table;
+    maximum    = Configuration_RTEMS_API.number_of_initialization_tasks;
+
+    if ( !user_tasks )
+        return;
+
+    register_global_construction = true;
+
+    /*
+    *  遍历初始化任务表，并创建任务，最后启动任务
+    */
+    for ( index=0 ; index < maximum ; index++ ) {
+        return_value = rtems_task_create(
+            user_tasks[ index ].name,
+            user_tasks[ index ].initial_priority,
+            user_tasks[ index ].stack_size,
+            user_tasks[ index ].mode_set,
+            user_tasks[ index ].attribute_set,
+            &id
+        );
+        
+        if ( !rtems_is_status_successful( return_value ) )
+            _Terminate( INTERNAL_ERROR_RTEMS_API, true, return_value );
+
+        entry_point = user_tasks[ index ].entry_point;
+
+        if ( register_global_construction && entry_point != NULL ) {
+            register_global_construction = false;
+            entry_point = (rtems_task_entry) _Thread_Global_construction;
+        }
+
+        return_value = rtems_task_start(
+            id,
+            entry_point,
+            user_tasks[ index ].argument
+        );
+        
+        if ( !rtems_is_status_successful( return_value ) )
+            _Terminate( INTERNAL_ERROR_RTEMS_API, true, return_value );
+    }
+}
+```
+需要注意的是，`RTEMS`会遍历`CONFIGURE_INIT_TASK_TABLE`，如果用户定义了`Configuration_RTEMS_API`宏和`CONFIGURE_INIT_TASK_TABLE`，那么在创建第一个任务的时候就会将函数的`entry point`更改为`_Thread_Global_construction` Task，之后任务将会按照`CONFIGURE_INIT_TASK_TABLE`的定义不做任何更改进行创建并启动。
+
+当任务创建或启动失败后会调用系统终止函数`_Terminate()`，该函数定义如下：
+```cpp
+void _Terminate(
+  Internal_errors_Source  the_source,
+  bool                    is_internal,
+  Internal_errors_t       the_error
+)
+{
+  ISR_Level level;
+
+  _ISR_Disable_without_giant( level );
+  (void) level;
+
+  _SMP_Request_shutdown();
+
+  _User_extensions_Fatal( the_source, is_internal, the_error );
+
+  _Internal_errors_What_happened.the_source  = the_source;
+  _Internal_errors_What_happened.is_internal = is_internal;
+  _Internal_errors_What_happened.the_error   = the_error;
+
+  _System_state_Set( SYSTEM_STATE_TERMINATED );
+
+  _CPU_Fatal_halt( the_source, the_error );
+
+  /* will not return from this routine */
+  while (true);
+}
+```
+
+**`注意`**：
+
+这里只是一系列的定义操作，并没有实质性调用`_RTEMS_tasks_Initialize_user_tasks_body()`函数；关于此函数的调用在这里还为时尚早，因为各种系统组件还没有准备妥当。所以，一定要等到`_RTEMS_API_Initialize()`函数完成之后的某一时刻才能去执行`_RTEMS_tasks_Initialize_user_tasks_body()`函数。
+
+2. IDLE task 进程
+idle task的 执行函数体是 Wait-For-Interrupt (WFI) instruction；
+```cpp
+void *_CPU_Thread_Idle_body( uintptr_t ignored )
+{
+  while ( true ) {
+    __asm__ volatile ("wfi");
+  }
+}
+```
+
+##rtems_initialize_device_drivers()系统函数
+初始化所有的设备驱动和MPCI层。
+
+`--enable-drvmgr = yes；`
+
+```cpp
+static void rtems_initialize_device_drivers(void)
+{
+  /* 初始化I/O驱动
+   *
+   * Driver Manager note:
+   * All drivers may not be registered yet. Drivers will dynamically
+   * be initialized when registered in level 2,3 and 4.
+   */
+  _IO_Initialize_all_drivers();
+  printk("All drivers have been initialized!\n");
+
+   
+  /* Run the APIs and BSPs postdriver hooks.
+   *  The API extensions are supposed to create user initialization tasks.
+   */
+  _API_extensions_Run_postdriver();
+}
+```
+1. ` _IO_Initialize_all_drivers()` 函数将会遍历`_IO_Driver_address_table[ ]`数组，定义在`/src/cpukit/sapi/include/confdefs.h`文件中，该数组中包含了所有静态注册的I/O驱动函数地址。具体定义如下：
+
+```cpp
+rtems_driver_address_table
+    _IO_Driver_address_table[ CONFIGURE_MAXIMUM_DRIVERS ] = {
+    ...
+    #ifdef CONFIGURE_APPLICATION_NEEDS_CONSOLE_DRIVER
+      CONSOLE_DRIVER_TABLE_ENTRY,
+    #endif
+    #ifdef CONFIGURE_APPLICATION_NEEDS_CLOCK_DRIVER
+      CLOCK_DRIVER_TABLE_ENTRY,
+    #endif
+   ...
+    #ifdef CONFIGURE_APPLICATION_EXTRA_DRIVERS
+      CONFIGURE_APPLICATION_EXTRA_DRIVERS,
+    #endif
+   ...
+  };
+```
+
+2.  `_API_extensions_Run_postdriver()`函数最终会调用到用户层定义的`Init()`函数；
+```cpp
+void _API_extensions_Run_postdriver( void )
+{
+  Chain_Node             *the_node;
+  API_extensions_Control *the_extension;
+
+  for ( the_node = _Chain_First( &_API_extensions_List );
+        !_Chain_Is_tail( &_API_extensions_List, the_node ) ;
+        the_node = the_node->next ) {
+
+    the_extension = (API_extensions_Control *) the_node;
+
+    /*
+     *  Currently all APIs configure this hook so it is always non-NULL.
+     */
+    (*the_extension->postdriver_hook)();
+  }
+}
+```
+
+ 函数会遍历`_API_extensions_List`中已经添加的扩展`task`，并调用其中的`postdriver_hook()`函数；根据上面的分析可知，之前`_RTEMS_tasks_Initialize_user_tasks_body()`函数的一系列操作只是进行设置，并没有实质性的调用`Init()`函数，真正的调用就是在这里开始的。
+
+## rtems_initialize_before_drivers()系统函数
+ 此函数实际上什么都没有做。
+ 
+
+## 还需要深入分析的部分
+
+_RTEMS_API_Initialize(void)的其他模块；
+void _POSIX_API_Initialize(void)的其他模块；
+
+```cpp
+void _RTEMS_API_Initialize(void)
+{
+  /*
+   * Install our API Object Management Table and initialize the
+   * various managers.
+   */
+  _Objects_Information_table[OBJECTS_CLASSIC_API] = _RTEMS_Objects;
+
+  _RTEMS_tasks_Manager_initialization();
+  _Timer_Manager_initialization();
+  _Signal_Manager_initialization();
+  _Event_Manager_initialization();
+  _Message_queue_Manager_initialization();
+  _Semaphore_Manager_initialization();
+  _Partition_Manager_initialization();
+  _Region_Manager_initialization();
+  _Dual_ported_memory_Manager_initialization();
+  _Rate_monotonic_Manager_initialization();
+  _Barrier_Manager_initialization();
+}
+
+void _POSIX_API_Initialize(void)
+{
+  /*
+   * If there are any type size assumptions in the POSIX API, this is
+   * the appropriate place to place them.
+   *
+   * Currently, there are no none type size assumptions.
+   */
+
+  /*
+   * Install our API Object Management Table and initialize the
+   * various managers.
+   */
+  _Objects_Information_table[OBJECTS_POSIX_API] = _POSIX_Objects;
+
+  _POSIX_Key_Manager_initialization();
+
+  #ifdef RTEMS_POSIX_API
+    _POSIX_signals_Manager_Initialization();
+    _POSIX_Threads_Manager_initialization();
+    _POSIX_Condition_variables_Manager_initialization();
+    _POSIX_Mutex_Manager_initialization();
+    _POSIX_Message_queue_Manager_initialization();
+    _POSIX_Semaphore_Manager_initialization();
+    _POSIX_Timer_Manager_initialization();
+    _POSIX_Barrier_Manager_initialization();
+    _POSIX_RWLock_Manager_initialization();
+    _POSIX_Spinlock_Manager_initialization();
+  #endif
+}
+
+```

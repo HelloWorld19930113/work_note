@@ -1,6 +1,4 @@
-[TOC]
-
-#PX4 offboard模式下的HIL
+# PX4 offboard模式下的HIL
 为了验证自己的offboard控制模式是否有效，在jMAVSim中搭建HIL环境进行测试。offboard的控制指令通过数传(TELEM2-57600/8/N/1)通信。
 
 ## 1.编译jMAVSim

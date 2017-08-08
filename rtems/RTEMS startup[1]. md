@@ -1,0 +1,372 @@
+# RTEMS 启动篇（一）
+
+## Board 初始化
+  纯粹是好奇心作祟，为了弄清楚 `RTEMS` 系统从执行第一条汇编代码到`Init`应用程序执行期间发生的事情。于是就有了这个`RTEMS 启动篇`系列。本着学习的态度来分析源码，如有理解不当的地方，还望各位看官指出。
+
+下面是整个程序的执行步骤：
+
+![](https://raw.githubusercontent.com/gzj2013/markdown_src/master/board_start.png)
+  
+  该图描述了汇编语言启动代码到boot_card.c的流程。经过C库、RTEMS、设备驱动初始化并上下文切换到第一个应用task。之后程序正常运行，直到它调用exit()、rtems_shutdown_executive()或其他一些程序终止指令。
+  
+  其中，Allocate RAM to workspace & heap中就是`bsp_work_area_initialize()`函数函数实现的主要功能。
+  
+    
+## 写在最前面
+**需要注意的**
+  BSP中的配置表是在调试期间默认生成的，不应该在代码中显式的引用。rtems提供了一个helper函数来访问单个域。
+  
+
+## start.S
+
+### 到底是哪一个start.S?
+
+bootloader启动完毕后，将系统镜像加载在内核中，此时开始执行的代码一般都是汇编指令。但是为什么就是这个`start.S`呢？
+在beagle的bsp路径下的Makefile.am中：
+
+```makefile
+libbspstart_a_SOURCES = ../shared/start/start.S
+```
+因此，这就是我们要找的`start.S`。`start.S` 文件路径位：**`c/src/lib/libbsp/arm/shared/start/start.S`**
+
+## start.S 为什么入口就一定是 _start？
+
+与程序起始地址相关联的label(标签)通常是`_start`。可是程序是如何知道这个入口就是`_start`呢？
+这时因为在连接脚本中指定了程序的入口为`_start`——ENTRY (_start)。
+
+```makefile
+OUTPUT_FORMAT ("elf32-littlearm", "elf32-bigarm", "elf32-littlearm")
+...
+ENTRY (_start)
+...
+```
+###`Start entry`
+
+由于系统环境配置的原因，`#define ARM_MULTILIB_ARCH_V4`宏会被定义，因此会进入相应的分支；具体的分支选择可以在`/src/cpukit/score/cpu/arm/rtems/score/arm.h`文件中找到。
+ 
+```armasm
+_start:
+
+/*
+ * 在这里我们并不会保存寄存器的上下文，因为我们之后不会再回到bootloader中了；
+ */
+
+#ifdef BSP_START_NEEDS_REGISTER_INITIALIZATION
+	bl bsp_start_init_registers_core
+#endif
+
+#ifdef RTEMS_SMP
+	/* Read MPIDR */
+	mrc	p15, 0, r0, c0, c0, 5
+
+	/* Calculate stack offset */
+	and	r0, #0xff
+	ldr	r1, =bsp_stack_all_size
+	mul	r1, r0
+#endif
+
+	/*
+	 * 设置 SVC 模式, 禁用中断并使能 ARM 指令集.
+	 */
+	mov	r0, #(ARM_PSR_M_SVC | ARM_PSR_I | ARM_PSR_F)
+	msr	cpsr, r0
+
+	/* 为其他几种模式初始化栈指针 */
+
+	/* 进入 IRQ 模式并设置 IRQ 栈指针 */
+	mov	r0, #(ARM_PSR_M_IRQ | ARM_PSR_I | ARM_PSR_F)
+	msr	cpsr, r0
+	ldr	sp, =bsp_stack_irq_end
+#ifdef RTEMS_SMP
+	add	sp, r1
+#endif
+
+	/* 进入 FIQ 模式并设置 FIQ 栈指针 */
+	mov	r0, #(ARM_PSR_M_FIQ | ARM_PSR_I | ARM_PSR_F)
+	msr	cpsr, r0
+	ldr	sp, =bsp_stack_fiq_end
+#ifdef RTEMS_SMP
+	add	sp, r1
+#endif
+
+#ifdef BSP_START_NEEDS_REGISTER_INITIALIZATION
+	bl bsp_start_init_registers_banked_fiq
+#endif
+
+	/* 进入 ABT 模式并设置 ABT 栈指针 */
+	mov	r0, #(ARM_PSR_M_ABT | ARM_PSR_I | ARM_PSR_F)
+	msr	cpsr, r0
+	ldr	sp, =bsp_stack_abt_end
+#ifdef RTEMS_SMP
+	add	sp, r1
+#endif
+
+	/* 进入 UND 模式并设置 UND 栈指针 */
+	mov	r0, #(ARM_PSR_M_UND | ARM_PSR_I | ARM_PSR_F)
+	msr	cpsr, r0
+	ldr	sp, =bsp_stack_und_end
+#ifdef RTEMS_SMP
+	add	sp, r1
+#endif
+
+	/* 进入 SVC 模式并设置 SVC 栈指针 */
+	mov	r0, #(ARM_PSR_M_SVC | ARM_PSR_I | ARM_PSR_F)
+	msr	cpsr, r0
+	ldr	sp, =bsp_stack_svc_end
+#ifdef RTEMS_SMP
+	add	sp, r1
+#endif
+
+	/* 停留在 SVC 模式 */
+
+#ifdef ARM_MULTILIB_VFP  /* 使能 VFP 浮点计算功能 */
+	/* Read CPACR */
+	mrc p15, 0, r0, c1, c0, 2
+
+	/* Enable CP10 and CP11 */
+	orr r0, r0, #(1 << 20)
+	orr r0, r0, #(1 << 22)
+
+	/*
+	 * Clear ASEDIS and D32DIS.  Writes to D32DIS are ignored for VFP-D16.
+	 */
+	bic r0, r0, #(3 << 30)
+
+	/* Write CPACR */
+	mcr p15, 0, r0, c1, c0, 2
+	isb
+
+	/* Enable FPU */
+	mov r0, #(1 << 30)
+	vmsr FPEXC, r0
+
+#ifdef BSP_START_NEEDS_REGISTER_INITIALIZATION
+	bl bsp_start_init_registers_vfp
+#endif
+
+#endif /* ARM_MULTILIB_VFP */
+
+	/*
+	 * 跳转到 bsp_start_hook_0 函数.
+	 * 之前的代码和 bsp_start_hook_0 的一部分代码是以偏移地址来运行的。
+	 * 这就说明只能跳转到和程序计数器 PC 相对的函数分支中去。 按理说 bsp_start_hook_0 
+	 * 运行完成后，代码就可以在预期位置上运行。因此， LR 寄存器中存放的是绝对地址。
+	 * 
+	 * 由于 THUMB 模式中的跳转指令限制， bsp_start_hook_0 函数的大小必须在2kByte范围内。
+	 * 
+	 */
+
+	ldr	lr, =bsp_start_hook_0_done
+#ifdef __thumb__
+	orr	lr, #1
+#endif
+
+	SWITCH_FROM_ARM_TO_THUMB	r0
+
+	b	bsp_start_hook_0   # 预留的用户自定义功能，默认为空
+
+bsp_start_hook_0_done:
+
+	SWITCH_FROM_THUMB_TO_ARM
+
+	/*
+	 * 初始化异常向量表.包括异常向量和默认的异常处理函数指针。
+	 */
+
+	ldr	r0, =bsp_vector_table_begin
+	adr	r1, bsp_start_vector_table_begin
+	cmp	r0, r1
+	beq	bsp_vector_table_copy_done
+	ldmia	r1!, {r2-r9}
+	stmia	r0!, {r2-r9}
+	ldmia	r1!, {r2-r9}
+	stmia	r0!, {r2-r9}
+
+bsp_vector_table_copy_done:
+
+	SWITCH_FROM_ARM_TO_THUMB	r0
+
+	/* 执行 bsp_start_hook_1 函数 */
+	bl	bsp_start_hook_1
+
+	/* Branch to boot card */
+	mov	r0, #0
+	bl	boot_card
+
+twiddle:
+
+	/* Branch to reset function */
+	bl	bsp_reset
+
+	b	twiddle
+```
+
+从`_start`开始一直到初始化异常向量表这里，程序的流程都很清晰。接下来分析一下初始化异常向量表时，`beq	bsp_vector_table_copy_done`是否成立。
+
+其中 `bsp_vector_table_begin` 是 `bsp_section_start_begin` ，为`.start` 段的起始位置。也就是`.bsp_start_text`的位置。而`bsp_start_vector_table_begin`是`.bsp_start_text`段的第一行代码。
+
+```cpp
+/* 
+ * 对于bsp_vector_table_begin 
+*/
+bsp_vector_table_begin = DEFINED (bsp_vector_table_in_start_section) ? bsp_section_start_begin : bsp_section_vector_begin;
+
+...
+
+// bsp_vector_table_begin 表达式中的依赖条件如下：
+bsp_vector_table_in_start_section = 1;
+
+SECTIONS {
+	.start : ALIGN_WITH_INPUT {
+		bsp_section_start_begin = .;
+		KEEP (*(.bsp_start_text))
+		KEEP (*(.bsp_start_data))
+		bsp_section_start_end = .;
+	} > REGION_START AT > REGION_START
+	bsp_section_start_size = bsp_section_start_end - bsp_section_start_begin;
+}
+
+...
+
+/* 
+ * 对于 bsp_start_vector_table_begin 
+*/
+.section	".bsp_start_text", "ax"
+.arm
+
+/*
+ * 异常向量表和默认的异常处理函数指针
+ */
+bsp_start_vector_table_begin:
+	...
+```
+
+### 1. bsp_start_hook_1 函数
+```cpp
+BSP_START_TEXT_SECTION void bsp_start_hook_1(void)
+{
+  arm_a8core_start_hook_1();  //向量基址寄存器设置为异常向量表的地址
+  bsp_start_copy_sections();  //加载程序阶段：拷贝所有的段到内存中
+  beagle_setup_mmu_and_cache();  //启动MMU和cache，设置Translation Table
+  bsp_start_clear_bss();       //将bss段的数据清零
+}
+```
+
+### 2. boot_card 函数
+>    `boot_card()`是从汇编代码调用到C代码，这个函数用于初始化整个系统框架。该函数会按照一定的顺序来交叉调用RTEMS和BSP中的函数来实现系统初始化，将可重用代码最大化，并且用C语言实现尽可能多的BSP代码。
+
+ 关中断之后开始初始化工作；
+```cpp
+void boot_card(
+  const char *cmdline
+)
+{
+  rtems_interrupt_level  bsp_isr_level;
+
+  (void) bsp_isr_level;
+  rtems_interrupt_local_disable( bsp_isr_level ); //确保关中断
+
+  bsp_boot_cmdline = cmdline;
+
+  rtems_initialize_executive();
+
+  /***************************************************************
+   ***************************************************************
+   *  APPLICATION RUNS NOW!!!  We will not return to here!!!     *
+   ***************************************************************
+   ***************************************************************/
+}
+```
+   `boot_card()`中主要调用的函数为`rtems_initialize_executive()`。
+
+#### rtems_initialize_executive()
+
+```cpp
+void rtems_initialize_executive(void)
+{
+  const volatile rtems_sysinit_item *cur = RTEMS_LINKER_SET_BEGIN(_Sysinit );
+  const volatile rtems_sysinit_item *end = RTEMS_LINKER_SET_END( _Sysinit );
+
+  /* 依次调用注册好的系统初始化函数 */
+  while ( cur != end ) {
+    ( *cur->handler )();
+    ++cur;
+  }
+
+  _System_state_Set( SYSTEM_STATE_UP );
+  
+  _SMP_Request_start_multitasking();
+  
+  _Thread_Start_multitasking();
+
+    /*******************************************************************
+   ******                 APPLICATION RUNS HERE                 ******
+   ******              THE FUNCTION NEVER RETURNS               ******
+   *******************************************************************/
+}
+```
+该函数实现的主要功能是：   
+- **执行已经注册的系统初始化函数**；
+- 将系统状态设置为已启动运行；
+- 如果定义了系统使用多处理器，则为多处理器执行多任务做准备；
+- 启动多任务调度管理器；
+
+   **NOTE**：对于多任务管理器的启动函数，一般是作为初始化的一部分来调用，是在系统初始化的单任务操作的最后一步调用。之后不再进行单任务操作。
+
+下面就系统初始化函数展开分析。
+
+##### 系统初始化函数
+这些函数都是使用`RTEMS_SYSINIT_ITEM()`宏来注册的。以下是被注册的系统函数：
+
+```C
+    bsp_work_area_initialize
+    bsp_start
+    bsp_libc_init
+    bsp_predriver_hook
+    bsp_postdriver_hook
+    rtems_initialize_data_structures
+    rtems_initialize_before_drivers
+    rtems_initialize_device_drivers
+```
+
+这些注册的函数在这里将会被全部依次调用执行。这些函数都会被链接到一个固定的`.rtemsroset.`段内，之后给这个段加上一个头和尾，然后在链接脚本中会根据`order`对各个函数在`.rtemsroset.`段内的排放位置进行排序。
+```
+RTEMS_LINKER_ROSET( _Sysinit, rtems_sysinit_item );
+rtems_sysinit_item volatile const _Linker_set__Sysinit_begin\
+__attribute__((__section__(".rtemsroset. _Sysinit .begin")))
+
+rtems_sysinit_item volatile const _Linker_set__Sysinit_end\
+__attribute__((__section__(".rtemsroset. _Sysinit .end")))
+
+...
+
+enum { _Sysinit_rtems_initialize_data_structures = 0x00030008 }; \
+rtems_sysinit_item volatile const _Linker_set__Sysinit_rtems_initialize_data_structures\
+__attribute__((__section__(".rtemsroset. _Sysinit .content.0. 08")))
+
+enum { _Sysinit_rtems_initialize_before_drivers = 0x00050008 }; \
+rtems_sysinit_item volatile const _Linker_set__Sysinit_rtems_initialize_before_drivers\
+__attribute__((__section__(".rtemsroset. _Sysinit .content.0. 08")))
+
+enum { _Sysinit_rtems_initialize_device_drivers = 0x00070008 }; \
+rtems_sysinit_item volatile const _Linker_set__Sysinit_rtems_initialize_device_drivers\
+__attribute__((__section__(".rtemsroset. _Sysinit .content.0. 08")))
+```
+这些函数实现了RTEMS系统的运行环境的初始化；因此这也是`start.S`中最重要的部分。**`因此将其放到后续篇章中进行分析`**。
+
+
+## _start 小结
+**`_start 总的功能流程：`**
+- 设置SVC(类似于管理员模式，具有最高权限)，并禁用中断；同时使能ARM指令集系统；
+- 初始化不同模式下的栈指针寄存器；
+- 使能浮点运算单元FPU;
+- 复制异常向量表；
+- 执行bsp_start_hook_1()函数；
+- 执行最重要的一个函数——boot_card();
+
+  <font color=#FF0000>根据一般的经验，在汇编中的启动代码只做必须的工作(代码最少化)，然后创建C运行环境，使用C代码执行完整的初始化序列。</font> 因此，汇编代码调用`boot_card()`函数切换到C语言运行环境并结束汇编指令。
+  
+
+## 参考资料
+
+ *BSP and Device Driver Development Guide*
