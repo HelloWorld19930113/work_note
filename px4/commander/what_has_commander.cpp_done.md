@@ -1,6 +1,17 @@
 
 
 
+##
+
+
+
+
+
+
+
+
+
+
 
 ## 所有的`commander`中关键的变量。
 
@@ -176,11 +187,16 @@ status_flags.rc_signal_found_once = false;
     orb_advert_t command_ack_pub = nullptr;
 ```
 
+
+
+
+
 ```
 ==============================================
 ===============  while (!thread_should_exit)   =============
 ==============================================
 ```
+
 ### 更新参数
 
  首先说明，在参数设置函数中会调用`param_notify_changes()`函数发布`ORB_ID(parameter_update)`主题。
@@ -192,115 +208,129 @@ status_flags.rc_signal_found_once = false;
 
 ```cpp
 /* 更新参数 */
-if (!armed.armed) {
-    // 飞行器的类型，如四旋翼、八旋翼和固定翼等；
-    if (param_get(_param_sys_type, &(status.system_type)) != OK) {
-        warnx("failed getting new system type");
+    if (!armed.armed) {
+        // 飞行器的类型，如四旋翼、八旋翼和固定翼等；
+        if (param_get(_param_sys_type, &(status.system_type)) != OK) {
+            warnx("failed getting new system type");
+        }
+
+        /* 禁用依赖于电子增稳机型的手动控制通道覆盖 ？？？*/
+        // 确定飞机是否为旋翼(直升机/垂直升降机也是旋翼)
+        if (is_rotary_wing(&status) || (is_vtol(&status) && vtol_status.vtol_in_rw_mode)) {
+            status.is_rotary_wing = true;
+
+        } else {
+            status.is_rotary_wing = false;
+        }
+
+        /* 确定飞机是否为垂直升降机 */
+        status.is_vtol = is_vtol(&status);
+
+        /* 获取飞机的系统/组件 ID */
+        param_get(_param_system_id, &(status.system_id));
+        param_get(_param_component_id, &(status.component_id));
+
+        // 获取断路器参数
+        get_circuit_breaker_params();
+
+        // 更新>>>>>>>>>>>>>>>>？？状态标志
+        status_changed = true;
     }
 
-    /* 禁用依赖于电子增稳机型的手动控制通道覆盖 ？？？*/
-    // 确定飞机是否为旋翼(直升机/垂直升降机也是旋翼)
-    if (is_rotary_wing(&status) || (is_vtol(&status) && vtol_status.vtol_in_rw_mode)) {
-        status.is_rotary_wing = true;
+    /* Safety 安全参数 */
+    param_get(_param_enable_datalink_loss, &datalink_loss_act);  // 设置地面站datalink丢失后的安全保护
+    param_get(_param_enable_rc_loss, &rc_loss_act); // 设置遥控器信号丢失后的安全保护，默认操作是RTL返回起飞点
+    param_get(_param_datalink_loss_timeout, &datalink_loss_timeout);  // 设置地面站datalink信号丢失的超时时间(默认10s)
+    param_get(_param_rc_loss_timeout, &rc_loss_timeout); // 设置遥控器信号丢失的超时时间(默认0.5s)
+    param_get(_param_rc_in_off, &rc_in_off);  // 设置遥控器数据关闭状态：默认为遥控器开
+    status.rc_input_mode = rc_in_off;             // 设置遥控器输入模式：默认为普通遥控器
+    param_get(_param_rc_arm_hyst, &rc_arm_hyst);  // armed/disarm 遥控杆就位的等待时间，默认值1000表示1s.
+    param_get(_param_min_stick_change, &min_stick_change);  // 设置可捕捉到的遥控杆最小变化值；
+    param_get(_param_rc_override, &rc_override);  // 使能/禁用 自动控制模式下的 rc_override
 
-    } else {
-        status.is_rotary_wing = false;
+    // percentage (* 0.01) needs to be doubled because RC total interval is 2, not 1
+    min_stick_change *= 0.02f;
+    rc_arm_hyst *= COMMANDER_MONITORING_LOOPSPERMSEC;  // 考虑线程运行频率对armed/disarm 遥控杆就位时间的影响，保证用户这边是确确实实的1s
+    param_get(_param_datalink_regain_timeout, &datalink_regain_timeout);  // 设置地面站datalink恢复的检测时间
+    param_get(_param_ef_throttle_thres, &ef_throttle_thres);     // 设置引擎安全保护的油门阈值
+    param_get(_param_ef_current2throttle_thres, &ef_current2throttle_thres);   // 设置引擎安全保护的当前油门给油量的比例阈值
+    param_get(_param_ef_time_thres, &ef_time_thres);                 // 设置引擎安全保护的等待时间
+    param_get(_param_geofence_action, &geofence_action);     // 设置地理围栏动作，默认是警告。
+    // 使能/禁用飞机降落后自动disarm，默认是禁用的。如果设置为正值，则经过设置的时间后自动disarm。
+    param_get(_param_disarm_land, &disarm_when_landed);   
+
+    // 首次更新参数时一定要保证自动disarm的时间间隔已经设置好(虽然降落后自动disarm是禁用的，
+    // 但是也应该设置，以防万一在某个时刻启用了降落后自动disarm)。之后这个时间间隔将会在 
+    // main state machine 状态机中根据 arming 的状态进行设置。
+    if (param_init_forced) {
+        auto_disarm_hysteresis.set_hysteresis_time_from(false,
+                            (hrt_abstime)disarm_when_landed * 1000000);
     }
 
-    /* 确定飞机是否为垂直升降机 */
-    status.is_vtol = is_vtol(&status);
+    param_get(_param_low_bat_act, &low_bat_action);     // 设置低电量操作，默认为警告；
+    // 设置offboard控制信号丢失后等待offboard_loss_act的时间，默认为0，即立即响应
+    param_get(_param_offboard_loss_timeout, &offboard_loss_timeout);  
+    // 设置offboard控制丢失后的操作，默认为原地降落
+    param_get(_param_offboard_loss_act, &offboard_loss_act);  
+    // 设置有RC信号下的offboard控制丢失后的操作，默认为position位置控制
+    param_get(_param_offboard_loss_rc_act, &offboard_loss_rc_act);  
+    // 设置 arm_switch 是一个开关/按钮。默认为开关。但我们一般使用的是button，长按可以armed/disarm
+    param_get(_param_arm_switch_is_button, &arm_switch_is_button);
 
-    /* 获取飞机的系统/组件 ID */
-    param_get(_param_system_id, &(status.system_id));
-    param_get(_param_component_id, &(status.component_id));
+    param_get(_param_arm_without_gps, &arm_without_gps_param);  // 设置GPS未定位也允许armed，默认是允许的
+    arm_without_gps = (arm_without_gps_param == 1);
 
-    // 获取断路器参数
-    get_circuit_breaker_params();
+Require valid mission to arm
 
-    // 更新>>>>>>>>>>>>>>>>？？状态标志
-    status_changed = true;
-}
+Comment: The default allows to arm the vehicle without a valid mission.
 
-/* Safety 安全参数 */
-param_get(_param_enable_datalink_loss, &datalink_loss_act);  // 设置地面站datalink丢失后的安全保护
-param_get(_param_enable_rc_loss, &rc_loss_act); // 设置遥控器信号丢失后的安全保护，默认操作是RTL返回起飞点
-param_get(_param_datalink_loss_timeout, &datalink_loss_timeout);  // 设置地面站datalink信号丢失的超时时间(默认10s)
-param_get(_param_rc_loss_timeout, &rc_loss_timeout); // 设置遥控器信号丢失的超时时间(默认0.5s)
-param_get(_param_rc_in_off, &rc_in_off);  // 设置遥控器数据关闭状态：默认为遥控器开
-status.rc_input_mode = rc_in_off;             // 设置遥控器输入模式：默认为普通遥控器
-param_get(_param_rc_arm_hyst, &rc_arm_hyst);  // armed/disarm 遥控杆就位的等待时间，默认值1000表示1s.
-param_get(_param_min_stick_change, &min_stick_change);  // 设置可捕捉到的遥控杆最小变化值；
-param_get(_param_rc_override, &rc_override);  // 使能/禁用 自动控制模式下的 rc_override
 
-// percentage (* 0.01) needs to be doubled because RC total interval is 2, not 1
-min_stick_change *= 0.02f;
-rc_arm_hyst *= COMMANDER_MONITORING_LOOPSPERMSEC;  // 考虑线程运行频率对armed/disarm 遥控杆就位时间的影响，保证用户这边是确确实实的1s
-param_get(_param_datalink_regain_timeout, &datalink_regain_timeout);  // 设置地面站datalink恢复的检测时间
-param_get(_param_ef_throttle_thres, &ef_throttle_thres);     // 设置引擎安全保护的油门阈值
-param_get(_param_ef_current2throttle_thres, &ef_current2throttle_thres);   // 设置引擎安全保护的当前油门给油量的比例阈值
-param_get(_param_ef_time_thres, &ef_time_thres);                 // 设置引擎安全保护的等待时间
-param_get(_param_geofence_action, &geofence_action);     // 设置地理围栏动作，默认是警告。
-// 使能/禁用飞机降落后自动disarm，默认是禁用的。如果设置为正值，则经过设置的时间后自动disarm。
-param_get(_param_disarm_land, &disarm_when_landed);   
+    param_get(_param_arm_mission_required, &arm_mission_required_param);  // 有效任务下的armed，默认是允许无任务armed。
+    arm_mission_required = (arm_mission_required_param == 1);
 
-// 首次更新参数时一定要保证自动disarm的时间间隔已经设置好(虽然降落后自动disarm是禁用的，
-// 但是也应该设置，以防万一在某个时刻启用了降落后自动disarm)。之后这个时间间隔将会在 
-// main state machine 状态机中根据 arming 的状态进行设置。
-if (param_init_forced) {
-    auto_disarm_hysteresis.set_hysteresis_time_from(false,
-                        (hrt_abstime)disarm_when_landed * 1000000);
-}
+    /* Autostart id */
+    param_get(_param_autostart_id, &autostart_id); // 自动启动脚本索引——SYS_AUTOSTART
 
-param_get(_param_low_bat_act, &low_bat_action);     // 设置低电量操作，默认为警告；
-// 设置offboard控制信号丢失后等待offboard_loss_act的时间，默认为0，即立即响应
-param_get(_param_offboard_loss_timeout, &offboard_loss_timeout);  
-// 设置offboard控制丢失后的操作，默认为原地降落
-param_get(_param_offboard_loss_act, &offboard_loss_act);  
-// 设置有RC信号下的offboard控制丢失后的操作，默认为position位置控制
-param_get(_param_offboard_loss_rc_act, &offboard_loss_rc_act);  
-// 设置 arm_switch 是一个开关/按钮。默认为开关。但我们一般使用的是button，长按可以armed/disarm
-param_get(_param_arm_switch_is_button, &arm_switch_is_button);
+    /* EPH / EPV */
+    param_get(_param_eph, &eph_threshold);   // Home点水平设置阈值，位置估计精度小于此值时就会设置Home点。
+    param_get(_param_epv, &epv_threshold);   // Home点垂直设置阈值，同上。
 
-param_get(_param_arm_without_gps, &arm_without_gps_param);  // 设置GPS未定位也允许armed，默认是允许的
-arm_without_gps = (arm_without_gps_param == 1);
+    /* flight mode slots */
+    param_get(_param_fmode_1, &_flight_mode_slots[0]);  // 飞行模式对应的slot槽。
+    param_get(_param_fmode_2, &_flight_mode_slots[1]);
+    param_get(_param_fmode_3, &_flight_mode_slots[2]);
+    param_get(_param_fmode_4, &_flight_mode_slots[3]);
+    param_get(_param_fmode_5, &_flight_mode_slots[4]);
+    param_get(_param_fmode_6, &_flight_mode_slots[5]);
 
-param_get(_param_arm_mission_required, &arm_mission_required_param);  // 设置
-arm_mission_required = (arm_mission_required_param == 1);
+    /* pre-flight EKF checks */
+    param_get(_param_max_ekf_pos_ratio, &max_ekf_pos_ratio);  // 允许armed的最大EKF的位置更新率。
+    param_get(_param_max_ekf_vel_ratio, &max_ekf_vel_ratio);    // 允许armed的最大EKF的速度更新率。
+    param_get(_param_max_ekf_hgt_ratio, &max_ekf_hgt_ratio);   // 允许armed的最大EKF的高度更新率。
+    param_get(_param_max_ekf_yaw_ratio, &max_ekf_yaw_ratio);  // 允许armed的最大EKF的偏航更新率。
+    param_get(_param_max_ekf_dvel_bias, &max_ekf_dvel_bias);   // 允许armed的最大EKF的加速度计速度差偏移。
+    param_get(_param_max_ekf_dang_bias, &max_ekf_dang_bias); // 允许armed的最大EKF的陀螺仪角度差偏移。
 
-/* Autostart id */
-param_get(_param_autostart_id, &autostart_id);
+    /* pre-flight IMU consistency checks */
+    Maximum accelerometer inconsistency between IMU units that will allow arming
+    param_get(_param_max_imu_acc_diff, &max_imu_acc_diff);   // 允许armed的IMU的加速度计的最大差值
+    param_get(_param_max_imu_gyr_diff, &max_imu_gyr_diff);    // 允许armed的IMU的陀螺仪的最大差值
 
-/* EPH / EPV */
-param_get(_param_eph, &eph_threshold);
-param_get(_param_epv, &epv_threshold);
+    /* failsafe response to loss of navigation accuracy */
+    param_get(_param_posctl_nav_loss_act, &posctl_nav_loss_act);  //导航精度不满足时的位置控制动作
 
-/* flight mode slots */
-param_get(_param_fmode_1, &_flight_mode_slots[0]);
-param_get(_param_fmode_2, &_flight_mode_slots[1]);
-param_get(_param_fmode_3, &_flight_mode_slots[2]);
-param_get(_param_fmode_4, &_flight_mode_slots[3]);
-param_get(_param_fmode_5, &_flight_mode_slots[4]);
-param_get(_param_fmode_6, &_flight_mode_slots[5]);
-
-/* pre-flight EKF checks */
-param_get(_param_max_ekf_pos_ratio, &max_ekf_pos_ratio);
-param_get(_param_max_ekf_vel_ratio, &max_ekf_vel_ratio);
-param_get(_param_max_ekf_hgt_ratio, &max_ekf_hgt_ratio);
-param_get(_param_max_ekf_yaw_ratio, &max_ekf_yaw_ratio);
-param_get(_param_max_ekf_dvel_bias, &max_ekf_dvel_bias);
-param_get(_param_max_ekf_dang_bias, &max_ekf_dang_bias);
-
-/* pre-flight IMU consistency checks */
-param_get(_param_max_imu_acc_diff, &max_imu_acc_diff);
-param_get(_param_max_imu_gyr_diff, &max_imu_gyr_diff);
-
-/* failsafe response to loss of navigation accuracy */
-param_get(_param_posctl_nav_loss_act, &posctl_nav_loss_act);
-
-param_init_forced = false;
-}
+    param_init_forced = false;
 ```
-  可以看到，涉及到的参数在代码中给出了注释；
+  这一部分主要是对`commander`中涉及到的参数初始化。
+  具体参数的描述已经在代码中给出了注释；可以看到，在这里提到的大部分参数在实际的参数调整中很关键。因此，很有必要熟悉这些关键的参数，这样才能在出现意外情况时快速定位并解决问题。
+
+
+
+###  `ORB_ID(manual_control_setpoint)`主题
+ 这个主题负责的是手动控制点。对应的原始数据是手动控制模式下遥控器的通道值。与遥控器相关，通过对应的通道映射关系(在遥控器校准阶段确定)将遥控器的通道值转换为最底层的`roll/pitch/yaw`通道值，然后再使用这个通道值来控制飞机的姿态。
+
+
+###  `ORB_ID(offboard_control_mode)`主题
 
 
 
