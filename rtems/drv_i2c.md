@@ -1,28 +1,39 @@
 # I2C驱动
 
-[TOC]
-
  I2C驱动一般分为两部分：总线驱动和设备驱动。一般是先实现总线驱动，后实现设备驱动。二者相比而言，总线驱动要比设备驱动复杂的多。 
 
- **几个重要的API:**
-`i2c_bus`的注册函数：
+## I2C总线驱动
+ I2C总线驱动框架选用的是以下框架，在rtems中包含两种I2C驱动框架。这个框架中的大概驱动开发模板如下：
+
 
 ```cpp
-i2c_bus *i2c_bus_alloc_and_init(size_t size);
+//i2c_bus的注册函数：
 
-bus->i2c_regs = i2c_regs;
-bus->irq_vector_num = irq_vector_num;
-bus->clock = input_clock;
-bus->i2c_bus_id = i2c_bus_id;
+int i2c_bus_register_am335x( const char *bus_path,
+        uint32_t i2c_bus_id, unsigned long input_clock )
+{
+    i2c_bus *i2c_bus_alloc_and_init(size_t size);
 
-bus->transfer = am335x_i2c_transfer;
-bus->set_clock = am335x_i2c_set_clock;
-bus->destroy = am335x_i2c_destroy;
-	
-int i2c_bus_register(i2c_bus *bus, char *bus_path);
+    bus->irq_vector_num = irq_vector_num;
+    bus->clock = input_clock;
+    bus->i2c_bus_id = i2c_bus_id;
+
+    bus->transfer = am335x_i2c_transfer;
+    bus->set_clock = am335x_i2c_set_clock;
+    bus->destroy = am335x_i2c_destroy;
+
+    // 注册相应的中断服务函数；
+    ......
+    	
+    int i2c_bus_register(i2c_bus *bus, char *bus_path);
+}
 ```
-
+ 这里有3个比较重要的函数，`transfer()、set_clock()和destroy()函数`。其中核心的函数就是`transfer()`。在此函数中会负责。。
  至此，`i2c总线`已经被注册到`RTEMS系统`中。接下来就可以在这条总线上挂载`i2c设备`了。
+
+
+
+
 
 `i2c_dev`的注册函数：
 

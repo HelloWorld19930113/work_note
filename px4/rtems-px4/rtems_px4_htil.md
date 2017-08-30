@@ -540,6 +540,7 @@ fi
 unset EXIT_ON_END
 ```
 
+
 ## rtems_px4启动脚本应该怎么实现
  这里需要找出rtems_px4中不同于px4中的启动脚本模块。
 
@@ -547,9 +548,7 @@ unset EXIT_ON_END
 2. offboard外部模式中使用的辅助控制串口设备号的设置：MAVLINK_COMPANION_DEVICE
 
 
-参考启动脚本：
-1. `init.d/rcS`
-2. 
+参考启动脚本： `init.d/rcS`
 
 
 
@@ -562,3 +561,13 @@ unset EXIT_ON_END
 
 
 ## 其他
+ 在通过修改QGC源码去除自动连接串口设备之后，使用以下命令：
+ ```bash
+ java -Djava.ext.dirs= -cp lib/*:out/production/jmavsim.jar me.drton.jmavsim.Simulator -serial /dev/ttyUSB0 115200 -qgc
+ ```
+ 启动`jMAVSim`虚拟机之后，出现了“Init MAVLink”消息。但是`QGC`连接`jMAVSim`虚拟机时出现的现象是：连接上几秒之后会立即断开，间隔很长时候之后会再次出现这种现象。
+
+> 解决思路：
+了解`QGC`使用`UDP连接`后的数据链路是否正常。这里当然需要保证源数据获取通路是没有问题的。源数据链路是`PixHawk`和`jMAVSim`虚拟机之间的数据交换。
+
+那么`QGC`中的
