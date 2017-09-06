@@ -74,8 +74,10 @@ CameraWorker 和 UxFrame 类之间的关系？
 openCapture()可以打开摄像头设备和录像文件。
 VideoCapture 是opencv中的一个类。
 cap.read(frame)表示读取到的图像以矩阵的形式保存在`frame`中。
+
 <2> FreezerSide::doWorkByLoop()
  这个函数才是真正的图像处理循环函数。
+
 先不考虑`FULL_DETECT`情形：
 ```
 1. 获取上下两张图像合并后的图像；
@@ -83,11 +85,16 @@ cap.read(frame)表示读取到的图像以矩阵的形式保存在`frame`中。
 
 
 ```
+3. 用户动作识别
+ 主要是识别用户对商品的操作——拿走/放回去。
+```
+MultiFrameShow 是核心
 
+- run() 
+ 另开一个线程，负责图像处理。
+ 
 
-3. 
-
-
+```
 
 
 ## 循环调度线程
