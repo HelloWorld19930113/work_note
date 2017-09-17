@@ -1,8 +1,13 @@
 # 徐其华 —— `caffe`学习系列
 
-1.[blog_src]learning_caffe.md 
+1.[blog_src]learning_caffe
  本系列的博客地址和目录；
-2.
+2.training mnist with caffe
+ 使用caffe 训练 mnist 样本嗯；
+3.data layer and paramters
+ 数据层和参数；
+ 
+
 caffe的python接口学习（8）：caffemodel中的参数及特征的抽取   
 caffe的python接口学习（7）：绘制loss和accuracy曲线      
 caffe的python接口学习（6）：用训练好的模型（caffemodel）来分类新的图片      
