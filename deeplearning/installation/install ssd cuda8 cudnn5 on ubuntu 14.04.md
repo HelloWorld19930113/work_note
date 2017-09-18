@@ -1,6 +1,6 @@
 # ubuntu 14.04 安装 ssd 以及出现的问题
 
->声明： 如果没有出现问题，直接过就好。如果出现问题了，再按照以下解决方案来做。
+>声明： 如果没有出现问题，直接过就好。如果出现问题了，可按照文章末尾提供的问题解决方案来做。
 
 ## 第一部分，准备材料（NVIDIA官网下载）：
 `显卡驱动`：NVIDIA-Linux-x86_64-367.44.run,(可以不使用这个，直接使用sudo apt-get install nvidia-367)
@@ -98,6 +98,19 @@ export LD_LIBRARY_PATH=/usr/local/cuda-8.0/lib64:$LD_LIBRARY_PATH
 ```bash
 $ cd /usr/local/cuda-8.0/bin
 $ sudo ./uninstall_cuda_8.0.pl
+```
+这里可能会出现链接问题
+```
+/usr/lib/nvidia-375/libEGL.so.1 is not a symbolic link
+/usr/lib32/nvidia-375/libEGL.so.1 is not a symbolic link
+/usr/local/cuda-8.0/targets/x86_64-linux/lib/libcudnn.so.5 is not a symbolic link
+```
+这里是软链接被拷贝为源文件了，需要重建软链接：
+```
+sudo ln -s /usr/lib/nvidia-375/libEGL.so.375.66 /usr/lib/nvidia-375/libEGL.so.1
+sudo ln -s /usr/lib32/nvidia-375/libEGL.so.375.66 /usr/lib32/nvidia-375/libEGL.so.1
+sudo ln -sf libcudnn.so.5.1.10 libcudnn.so.5
+sudo ln -sf libcudnn.so.5 libcudnn.so
 ```
 
 2.5 显卡驱动安装
@@ -222,6 +235,7 @@ $ sudo ln -sf libcudnn.so.5 libcudnn.so
 ```bash
 $ sudo ldconfig
 ```
+>>>>>>>>>>>>
 
 2.9 拉取caffe源码
 ```bash
@@ -243,6 +257,7 @@ $ sudo su
 $ for req in $(cat requirements.txt); do pip install $req; done
 ```
 这步安装也有点慢，别急，等会儿，先去干点别的 ^_^
+安装完成之后退出root用户。
 
 2.12 编辑caffe所需的Makefile文件，配置
 ```bash
@@ -294,48 +309,50 @@ PS:
 
 
 
-## 安装中可能出现的问题 
+## 安装中出现的问题汇总
 
 1. 运行make之后出现如下错误：
+```
 /usr/include/boost/property_tree/detail/json_parser_read.hpp:257:264: error: ‘type name’ declared as function returning an array 
 escape 
 ^ 
 /usr/include/boost/property_tree/detail/json_parser_read.hpp:257:264: error: ‘type name’ declared as function returning an array 
 make: * [.build_release/cuda/src/caffe/layers/detection_output_layer.o] Error 1 
 make: * Waiting for unfinished jobs….
-
+```
 办法： 
-修改json_parser_read.hpp：打开文件夹Document，选中computer，在搜索json_parser_read.hpp，找到该文件的路径之后用如下命令打开
+修改`json_parser_read.hpp`：打开文件夹`Document`，选中`computer`，在搜索json_parser_read.hpp，找到该文件的路径之后用如下命令打开
 
+```
 sudo gedit /usr/include/boost/property_tree/detail/json_parser_read.hpp
-将257行开始的escape代码段注释掉即可，如下：
-
+```
+将257行开始的`escape`代码段注释掉即可，如下：
+```
 /*escape
-                    =   chset_p(detail::widen<Ch>("\"\\/bfnrt").c_str())
-                            [typename Context::a_escape(self.c)]
-                    |   'u' >> uint_parser<unsigned long, 16, 4, 4>()
-                            [typename Context::a_unicode(self.c)]
-                    ;*/
+=   chset_p(detail::widen<Ch>("\"\\/bfnrt").c_str())
+      [typename Context::a_escape(self.c)]
+|   'u' >> uint_parser<unsigned long, 16, 4, 4>()
+      [typename Context::a_unicode(self.c)]
+;*/
 
+```
 
-
-2. 在make py的时候，遇到了这个错误:
-
+2. 在`make py`的时候，遇到了这个错误(ubuntu 16.04 中的问题，在ubuntu14.04中应该不会遇到):
+```
 /usr/bin/ld: cannot find -lhdf5_hl
 /usr/bin/ld: cannot find -lhdf5
 collect2: error: ld returned 1 exit status
-
-这说明连接器找不到　hdf5_hl和hdf5这两个库，没法进行链接。 
-我的解决方案是更改makefile:在ｍakefile中作如下更改：
-
+```
+这说明连接器找不到`hdf5_hl`和`hdf5`这两个库，没法进行链接。 
+我的解决方案是更改`makefile`:
+```
 #LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_serial_hl hdf5_serial
-
+```
 把第一行注释，然后改成第二行的内容就可以了。
 
-3. Check failed: error == cudaSuccess (10 vs. 0)  invalid device ordinal
- 在330行附近，将`gpus = "0,1,2,3,4"`改为`gpus = "0"`;
-
+3. 训练过程中遇到:`Check failed: error == cudaSuccess (10 vs. 0)  invalid device ordinal`
+ 是因为GPU个数的原因，枚举设备时候出错。在`ssd_pascal_xxx.py`330行附近，将`gpus = "0,1,2,3,4"`改为`gpus = "0"`;
 ```
 # Solver parameters.
 # Defining which GPUs to use.
@@ -344,12 +361,15 @@ gpulist = gpus.split(",")
 num_gpus = len(gpulist)
 ```
 
-4. 编译cuda-examples时，/usr/bin/ld: cannot find -lglut
+4. 缺少库文件 
+编译`cuda-examples`时，
+`/usr/bin/ld: cannot find -lglut`
+
 ```bash
 sudo apt-get install freeglut3 freeglut3-dev
 ```
 
-5. 运行python 脚本的时候，import caffe出错
+5. 运行`python`脚本的时候，import caffe出错
 添加:
 ```bash
 import sys
@@ -358,3 +378,105 @@ sys.path.append(“/home/smith/caffe/python”)
 or:
 $ export PYTHONPATH=$PYTHONPATH:/home/smith/caffe/python
 ```
+
+6. make runtest -j4编译时GT540M的CUDA Capability是2.1,而官方的cudnn加速是不支持3.0以下的版本的Check failed: status == CUDNN_STATUS_SUCCESS (6 vs. 0)
+caffe make runtest error（core dumped）Check failed: status == CUDNN_STATUS_SUCCESS (6 vs. 0)
+
+=================================================================
+
+简单讲就是GPU的加速性能不够，CUDNN只支持CUDA Capability 3.0以上的GPU加速
+
+==================================================================
+
+在实验室台式机上(I7+GeForce GTX TITAN Black With CUDA CAPABILITY 3.5)成功配置caffe并测试数据无误、训练数据也开始以后，也打算笔记本上(I5+GEFORCE GT540M--With CUDA CAPABILITY 2.1)配上caffe.
+
+于是安装了cuda和cudnn加速，make和make test都过了，而make runtest时报错，大概是这样滴错误
+
+ 
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+<pre name="code" class="plain">[----------] 6 tests from CuDNNConvolutionLayerTest/1, where TypeParam = double
+[ RUN      ] CuDNNConvolutionLayerTest/1.TestSimpleConvolutionGroupCuDNN
+F1014 08:55:30.083176 23568 cudnn_conv_layer.cpp:30] Check failed: status == CUDNN_STATUS_SUCCESS (6 vs. 0)  CUDNN_STATUS_ARCH_MISMATCH
+*** Check failure stack trace: ***
+    @     0x2b082d0a8daa  (unknown)
+    @     0x2b082d0a8ce4  (unknown)
+    @     0x2b082d0a86e6  (unknown)
+    @     0x2b082d0ab687  (unknown)
+    @           0x739689  caffe::CuDNNConvolutionLayer<>::LayerSetUp()
+    @           0x42c1f0  caffe::Layer<>::SetUp()
+    @           0x49d776  caffe::CuDNNConvolutionLayerTest_TestSimpleConvolutionGroupCuDNN_Test<>::TestBody()
+    @           0x68d613  testing::internal::HandleExceptionsInMethodIfSupported<>()
+    @           0x6840b7  testing::Test::Run()
+    @           0x68415e  testing::TestInfo::Run()
+    @           0x684265  testing::TestCase::Run()
+    @           0x6875a8  testing::internal::UnitTestImpl::RunAllTests()
+    @           0x687837  testing::UnitTest::Run()
+    @           0x41e9d0  main
+    @     0x2b0831cf1ec5  (unknown)
+    @           0x4261c7  (unknown)
+    @              (nil)  (unknown)
+make: *** [runtest] Aborted (core dumped) caffe::NetTest_TestReshape_Test<>::TestBody()
+    @           0x68d613  testing::internal::HandleExceptionsInMethodIfSupported<>()
+    @           0x6840b7  testing::Test::Run()
+    @           0x68415e  testing::TestInfo::Run()
+    @           0x684265  testing::TestCase::Run()
+    @           0x6875a8  testing::internal::UnitTestImpl::RunAllTests()
+    @           0x687837  testing::UnitTest::Run()
+    @           0x41e9d0  main
+    @     0x2b2a9f778ec5  (unknown)
+    @           0x4261c7  (unknown)
+    @              (nil)  (unknown)
+make: *** [runtest] Aborted (core dumped)
+
+
+
+ 
+
+在内网找了半天无果，终于在墙外找到了解决办法，不，是问题所在。 因为笔记本上的GT540M的CUDA Capability是2.1,而官方的cudnn加速是不支持3.0以下的版本的，因此只能在Makefile.config中注释掉USE_CUDNN这行，重新执行以下
+
+ 
+
+ 
+
+1
+2
+3
+4
+make clean
+make all -j4
+make test -j4
+make runtest -j4
+最后除了make runtest中2 DISABLED TESTS之外，没有其他问题。make runtest中出现几个测试例子不过不影响使用
