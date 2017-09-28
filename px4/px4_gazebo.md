@@ -1,59 +1,4 @@
-# PX4 的 ROS 仿真环境搭建
- 
-## Gazebo仿真
- Gazebo是种软件仿真 ，是一个自主机器人3D仿真环境。它能够作为一个完整的机器人仿真套件或脱机用于机器人。其中Plugin是自行编译的。
-
-## 安装过程
-
-- 1. 安装Gazebo 6仿真器(ubuntu 15.10)
-```
-$ wget -O gazebo/gazebo6_install.sh http://osrf-distributions.s3.amazonaws.com/gazebo/gazebo6_install.sh;
-$ cd gazebo
-$ sudo sh ./gazebo6_install.sh
-```
-- 2. 运行
-~$ gazebo
-# => 安装protobuf 库
-~$sudo apt-get install libprotobuf-dev libprotoc-dev protobuf-compiler libeigen3-dev
-# => 编译Gazebo插件
-# => 克隆gazebo plugins repository到~/src/sitl_gazebo
-~$git clone https://github.com/PX4/sitl_gazebo.git
-# => 在仓库的顶层建立Build文件夹
-~$mkdir Build
-# => 把build目录添加到gazebo plugin path，e.g.添加如下到我的.profile 文件
-# Set the plugin path so Gazebo finds our model and sim
-export GAZEBO_PLUGIN_PATH=${GAZEBO_PLUGIN_PATH}:$HOME/src/sitl_gazebo/Build
-# Set the model path so Gazebo finds the airframes
-export GAZEBO_MODEL_PATH=${GAZEBO_MODEL_PATH}:$HOME/src/sitl_gazebo/models
-# Disable online model lookup since this is quite experimental and unstable
-export GAZEBO_MODEL_DATABASE_URI=""
-# => 还需要添加仓库的主目录
-# Set path to sitl_gazebo repository
-export SITL_GAZEBO_PATH=$HOME/src/sitl_gazebo
-# => 使生效
-~$source~/.profile
-# => 进入Build目录执行make
-~$cd~/src/sitl_gazebo/Build
-~$cmake ..
-# => 生成sdf文件
-~$make sdf
-# => 构建 gazebo plugins
-~$make
-# => 现在可以运行gazebo了
-～$gazebo
-
-
-
-
-
-
-
-
-
-
-
-
-ROS(indigo) 安装和使用更新版本的Gazebo，本文以7为例。
+# ROS(indigo) 安装和使用更新版本的Gazebo，本文以7为例。
 
 Gazebo7支持更多新的功能，如果使用下面命令安装ROS（indigo）：
 
@@ -126,7 +71,8 @@ $ sudo apt-get install gazebo7
 $ gazebo  
 ```
 ## 安装ROS
- 但是到这里只是安装了Gazebo的新版，需要重新安装ROS。ROS Kinetic只支持Wily(15.10)和Xenial(16.04)对应内核分别为4.2和4.4，其他版本需要编译安装不支持直接deb软件源安装，
+ 但是到这里只是安装了Gazebo的新版，需要重新安装ROS
+ 对应内核分别为4.2和4.4，其他版本需要编译安装不支持直接deb软件源安装，
 
 - 1. 使用下面命令添加软件下载源：
 
@@ -148,7 +94,7 @@ hkp://ha.pool.sks-keyservers.net:80
 
 ```bash
 $ sudo apt-get update
-$ sudo apt-get install ros-kinetic-desktop
+$ sudo apt-get install ros-indigo-desktop
 ```
 注意不要安装full版，Gazebo2不能与更新版本的Gazebo共存，需要单独安装所需功能包即可。
 然后，安装ros-gazebo接口库等，以7为例如下：
@@ -163,16 +109,16 @@ ros-indigo-gazebo7-ros
 
 安装功能包：
 ```bash
-$ sudo apt-get install ros-kinetic-PACKAGE
+$ sudo apt-get install ros-indigo-PACKAGE
 ```
 
 例如：
 ```bash
-$ sudo apt-get install ros-kinetic-slam-gmapping
+$ sudo apt-get install ros-indigo-slam-gmapping
 ```
 查找在kinetic中可以使用的功能包：
 ```bash
-$ apt-cache search ros-kinetic$ apt-cache search ros-kinetic
+$ apt-cache search ros-indigo$ apt-cache search ros-indigo
 ```
 
 - 4. 初始化
@@ -195,20 +141,18 @@ Query rosdistro index https://raw.githubusercontent.com/ros/rosdistro/master/ind
 Add distro "groovy"
 Add distro "hydro"
 Add distro "indigo"
-Add distro "jade"
-Add distro "kinetic"
 updated cache in /home/relaybot/.ros/rosdep/sources.cache
 
 - 5. 环境配置
 
 ```bash
-$ echo "source /opt/ros/kinetic/setup.bash" >> ~/.bashrc
+$ echo "source /opt/ros/indigo/setup.bash" >> ~/.bashrc
 $ source ~/.bashrc
 ```
 注意当安装多个ROS发行版，使用kinetic需要用到下面命令：
 
 ```bash
-$ source /opt/ros/kinetic/setup.bash
+$ source /opt/ros/indigo/setup.bash
 ```
 
 - 6. 安装rosinstall
@@ -226,8 +170,53 @@ $ roscore
 
 
 下面可以按照 教程 进入仿真。
-~$cd~/src/Firmware
-~$ make posix_sitl_default gazebo
+
+Gazebo配置
+
+安装protobuf库，它用作Gazebo的接口。
+
+```bash
+$ sudo apt-get install libprotobuf-dev libprotoc-dev protobuf-compiler libeigen3-dev 
+```
+
+在仿真文件夹目录顶层创建一个 Build 文件夹
+
+```bash
+$ cd ~/src/Firmware/Tools/sitl_gazebo
+$ mkdir Build
+```
+
+添加路径
+
+```bash
+# 设置插件的路径以便 Gazebo 能找到模型文件
+export GAZEBO_PLUGIN_PATH=${GAZEBO_PLUGIN_PATH}:$HOME/src/Firmware/Tools/sitl_gazebo/Build
+# 设置模型路径以便 Gazebo 能找到机型
+export GAZEBO_MODEL_PATH=${GAZEBO_MODEL_PATH}:$HOME/src/Firmware/Tools/sitl_gazebo/models
+# 禁用在线模型查找
+export GAZEBO_MODEL_DATABASE_URI=""
+# 设置 sitl_gazebo 文件夹的路径
+export SITL_GAZEBO_PATH=$HOME/src/Firmware/Tools/sitl_gazebo
+```
+
+切换到构建目录并从中调用`CMake`
+```bash
+$ cd Build
+$ cmake ..
+```
+构建 gazebo 插件
+
+```bash
+$ make
+```
+
+万事俱备，只欠东风。现在就可以运行`Gazebo`仿真了，以最基本的`iris`仿真为例
+
+```bash
+$ cd~/src/Firmware
+$ make posix_sitl_default gazebo
+```
+
 教程到这里，基本的环境算是搭建好了，接下来应该就是各个模块的学习了。
 
 -End-

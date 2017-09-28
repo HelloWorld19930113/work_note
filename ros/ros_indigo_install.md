@@ -1,5 +1,39 @@
 # ROS indigo 环境搭建
  
+## 安装Gazebo7
+
+1 设置您的计算机以接受来自packages.osrfoundation.org的软件。
+
+```bash
+$ sudo sh -c 'echo "deb http://packages.osrfoundation.org/gazebo/ubuntu-stable `lsb_release -cs` main" > /etc/apt/sources.list.d/gazebo-stable.list'
+```
+
+2 添加秘钥
+
+```bash
+$ wget http://packages.osrfoundation.org/gazebo.key -O - | sudo apt-key add -
+```
+
+
+3 安装Gazebo7
+
+```bash
+# 首先更新源
+$ sudo apt-get update
+# 安装Gazebo7
+$ sudo apt-get install gazebo7 
+# 开发者需要安装额外的包
+$ sudo apt-get install libgazebo7-dev
+```
+
+现在可以尝试启动`gazebo`，直接从命令行启动
+
+```bash
+$ gazebo
+```
+
+
+
 ## 安装过程
 ROS indigo不支持Wily(15.10)和Xenial(16.04)对应内核分别为4.2和4.4，其他版本需要编译安装不支持直接deb软件源安装，
 
@@ -45,6 +79,7 @@ $ sudo apt-get install ros-indigo-PACKAGE
 ```bash
 $ sudo apt-get install ros-indigo-slam-gmapping
 ```
+
 查找在indigo中可以使用的功能包：
 ```bash
 $ apt-cache search ros-indigo$ apt-cache search ros-indigo

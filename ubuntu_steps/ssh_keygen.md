@@ -5,8 +5,8 @@ Git是分布式的代码管理工具，远程的代码管理是基于SSH的，�
 ## 1. 设置Git的user name和email
 
 ```bash
-$ git config --global user.name "xuhaiyan"
-$ git config --global user.email "haiyan.xu.vip@gmail.com"
+$ git config --global user.name "zack"
+$ git config --global user.email "guozhijie_2006@126.com"
 ```
 ## 2. 生成SSH密钥
 
@@ -15,7 +15,7 @@ $ git config --global user.email "haiyan.xu.vip@gmail.com"
 $ cd ~/.ssh
 
 # 生成密钥：
-$ ssh-keygen -t rsa -C “haiyan.xu.vip@gmail.com”
+$ ssh-keygen -t rsa -C "guozhijie_2006@126.com"
 
 # 按3个回车，密码为空。
 
