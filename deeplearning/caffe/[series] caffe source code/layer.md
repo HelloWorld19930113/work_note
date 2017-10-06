@@ -133,4 +133,30 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
  同样是根据`engine`是否为`GPU`來获取对应的层。
 
 
+```
+class Layer
+{
+    explicit Layer(const LayerParameter& param)
+      : layer_param_(param) {...}
+  
+    /* 1.检查层的输入数据和输出数据的个数是否正确；
+     * 2.在LayerSetUp()函数中为一些特别的层做特殊处理。因此该函数是应该被重载的。
+     * 3.对输出数据reshape
+     * 4.为非零权重值设置`loss`权重`multiplier`
+     */
+    void SetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {...}
+   
+    /*
+     * 实现特定层的一些初始化工作;
+     * 用户自定义的层应该实现这个函数和Reshape()函数
+     */
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+      const vector<Blob<Dtype>*>& top) {}
+
+}
+```
+
+ 用户不应该实现自己的构造函数。任何设置代码应该放在SetUp()函数中，这个函数中提供了输入数据的维度。
+
  
