@@ -27,6 +27,9 @@ F0922 09:56:39.407747 16020 net.cpp:169] Check failed: param_size <= num_param_b
 
 
 
+
+
+
 7.`caffe`编译出错
 
 错误：
