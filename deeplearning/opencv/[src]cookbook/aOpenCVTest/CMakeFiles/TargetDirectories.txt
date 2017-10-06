@@ -1,0 +1,3 @@
+/home/ldd/work/gitwork/c_blind_clear/cpp/opencv/CMakeFiles/edit_cache.dir
+/home/ldd/work/gitwork/c_blind_clear/cpp/opencv/CMakeFiles/rebuild_cache.dir
+/home/ldd/work/gitwork/c_blind_clear/cpp/opencv/CMakeFiles/testOpencv.dir
