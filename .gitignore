@@ -1,1 +1,7 @@
+
+
 *~
+*.avi
+
+*.ipynb
+.ipynb_checkpoints/
