@@ -20,10 +20,9 @@
 ![](pictures/CommonSettings1.jpg)   
 ![](pictures/CommonSettings2.jpg)   
 4. 选择编译类型为`release,x64`:   
-关闭视警告为错误(即设置为No)如果不设置的话在编译boost库的时候会由于文字编码的警告而报错.然后载开始编译,(先编译的是`libcaffe`).等啊等.....编译成功后
-在`caffe-master`文件夹下就应该出现一个名叫`Build\X64\Relase`的文件夹, 前面已经提示是先编译的`libcaffe`,在`solution`上面右击选择属性（`properties`）可以发现默认选择的是单任务，所以只编译`libcaffe`。   
-
-接下来，可以选择更多的任务来编译。类似地，我们接下来也可以只选择`caffe`来编译，同样的要注意`release和X64`. 还有一些其他的需要的时候再编译：比如`pycaffe`。       
+   关闭视警告为错误(即设置为No)如果不设置的话在编译boost库的时候会由于文字编码的警告而报错.然后载开始编译,(先编译的是`libcaffe`).等啊等.....编译成功后
+在`caffe-master`文件夹下就应该出现一个名叫`Build\X64\Relase`的文件夹, 前面已经提示是先编译的`libcaffe`,在`solution`上面右击选择属性（`properties`）可以发现默认选择的是单任务，所以只编译`libcaffe`。    
+   接下来，可以选择更多的任务来编译。类似地，我们接下来也可以只选择`caffe`来编译，同样的要注意`release和X64`. 还有一些其他的需要的时候再编译：比如`pycaffe`。       
 
 **注意**:
   之所以选择微软官方的版本,是因为在编译过程中会自动下载一些依赖库.    
