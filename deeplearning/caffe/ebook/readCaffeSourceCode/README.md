@@ -1,2 +1,3 @@
 # caffe 源码阅读
- caffe源码阅读笔记整理   
+
+# [梳理caffe代码 - math_functions (一)](math_functions.cpp)
