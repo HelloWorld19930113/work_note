@@ -12,3 +12,23 @@
  caffe基于blobs存储和交换数据。为了便于优化，
  
 
+
+2. `proto`数据结构（类）的标准化操作
+```
+void CopyFrom();	//在ByteString中定义实现ByteString和字节数组/字符串互相转换函数
+void MergeFrom();	//用于合并
+void Clear();
+bool IsInitialized() const;
+int ByteSize() const;
+
+bool MergePartialFromCodedStream();
+
+// 解码时可以调用C++接口ParseFromArray, 编码时可以先调用C++接口ByteSize预先获得编码后的数据大小，让后动态分配内存后调用SerializeToArray进行编码即可。
+
+void SerializeWithCachedSizes() const;//序列化打包
+SerializeWithCachedSizesToArray() const;
+int GetCachedSize()//打包后出来的大小
+void SharedCtor();
+void SharedDtor();
+void SetCachedSize() const;
+```
