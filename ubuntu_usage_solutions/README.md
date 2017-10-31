@@ -18,7 +18,7 @@
 - [14. 配置`shadowsocks`](./doc/shadowsocks_install.md)  
 - [15. 搜狗输入法的安装和卸载](./doc/sogou_install.md)  
 - [16. 更换`ubuntu`软件下载源(`163`)](./doc/sourceslist.md)  
-- [17. Git SSH Key 生成步骤](./doc/ssh_keygen.md)  
+- [17. `ssh-keygen`生成步骤](./doc/ssh_keygen.md)  
 - [18. `sublime text3`注册码](./doc/sublime_text3_register.md)  
 - [19. `sublime_text3`输入法不跟随光标](./doc/sublime_text3_QA.md)  
 - [20. 解决`Sublime Text3`无法输入中文](./doc/sublime_text3_ZhCn.md)  
