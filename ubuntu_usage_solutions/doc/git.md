@@ -90,24 +90,52 @@ $ git commit --amend
 
 
 ## 10. git 添加多个远程仓库
-
-
-比如你有`oschina`和`github`
+ 比如你有`oschina`和`github`
 ```
-#添加github
-git remote add origin https://github.com/xxx(仓库地址)
-#添加oschina
-git remote add oschina https://git.oschina.net/xxxx(仓库地址)
+git remote add origin https://github.com/xxx(仓库地址)  #添加github
+git remote add oschina https://git.oschina.net/xxxx(仓库地址)  #添加oschina
 
-#提交到oschina
-git push oschina master(分支名)
-#提交到github
-git push origin master(分支名)
+git push oschina master(分支名)  #提交到oschina
+git push origin master(分支名)   #提交到github
 
-#从oschina更新
-git pull oschina master
-#从github更新
-git pull origin master
+git pull oschina master    #从oschina更新
+git pull origin master     #从github更新
 ```
-`git remote add <name> <url>`
-其中，`name`表示你要给这个远程库起的名字, `url`表示这个库的地址提交的时候，先`add`, `commit`。然后`git push <name> <branch>`就行。其中，`name`表示你在上一步给它起的名字，`branch`表示某一个分支。
+
+ `git remote add <name> <url>`      
+ 其中，`name`表示你要给这个远程库起的名字, `url`表示这个库的地址提交的时候，先`add`, `commit`。
+
+ `git push <name> <branch>`     
+ 其中，`name`表示你在上一步给它起的名字，`branch`表示某一个分支。    
+
+
+## 11. connect to host github.com port 22: Connection timed out
+ 访问`github.com`超时。    
+```$ ssh git@github.com 
+ssh: connect to host github.com port 22: Connection timed out
+```
+
+**解决办法(windows/linux 通用)**：   
+ 在`.ssh`目录下创建一个`config`文件，输入如下内容：   
+```
+Host github.com 
+User guozhijie_2006@126.com 
+Hostname ssh.github.com 
+PreferredAuthentications publickey 
+IdentityFile C:/Users/Administrator/.ssh/id_rsa 
+Port 443 
+```
+注意修改你的邮箱，保存并关闭    
+
+进行测试是否连接上`github.com`      
+```
+ssh -T git@github.com 
+
+The authenticity of host ‘[ssh.github.com]:443 ([207.97.227.248]:443)’ can’t be established. 
+RSA key fingerprint is 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48. 
+Are you sure you want to continue connecting (yes/no)? y 
+Please type ‘yes’ or ‘no’: yes 
+Warning: Permanently added ‘[ssh.github.com]:443,[207.97.227.248]:443’ (RSA) to the list of known hosts. 
+Hi gzj2013! You've successfully authenticated, but GitHub does not provide shell access. 
+```
+出现`Hi xxx!……`表示连接成功。        
