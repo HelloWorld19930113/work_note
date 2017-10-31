@@ -1,9 +1,8 @@
-# Caffe 在Ubuntu 14.04 64bit 下的安装
-  关于Ubuntu 版本的选择，建议用ubuntu 14.04这个比较稳定的版本。
+# ubuntu 14.04 安装 ssd 以及出现的问题
 
 >声明： 如果没有出现问题，直接过就好。如果出现问题了，可按照文章末尾提供的问题解决方案来做。
 
-## 1. 准备材料（NVIDIA官网下载）：
+## 第一部分，准备材料（NVIDIA官网下载）：
 `显卡驱动`：NVIDIA-Linux-x86_64-367.44.run,(可以不使用这个，直接使用sudo apt-get install nvidia-367)
 
 `Cuda8.0`:cuda_8.0.44_linux.run
@@ -12,7 +11,7 @@
 `Cudnn`：cudnn-8.0-linux-x64-v5.1.tgz
 下载网址：https://developer.nvidia.com/cudnn
 
-## 2. 安装步骤
+## 第二部分，安装步骤
 2.1 系统安装
 系统选择ubuntu14.04，下载后ultrISO制作到U盘安装，不细说了。关闭系统更新。
 
@@ -219,7 +218,7 @@ Wed Sep  6 15:02:50 2017
 ```
 
 2.7 Atlas安装
- ATLAS是做线性代数运算的，还有俩可以选：一个是Intel 的 `MKL`，这个要收费，还有一个是`OpenBLAS`，这个比较麻烦；但是运行效率`ATLAS < OpenBLAS < MKL`  
+
 ```bash
 $ sudo apt-get install libatlas-base-dev
 ```
@@ -244,38 +243,35 @@ $ sudo ln -sf libcudnn.so.5 libcudnn.so
 $ sudo ldconfig
 ```
 
-## 3. 安装`Caffe`需要的`Python`包     
-  网上介绍用现有的`anaconda`，我反正不建议，因为路径设置麻烦，很容易出错，而且自己安装很简单也挺快的。   
+2.9 拉取caffe源码
+```bash
+$ git clone https://github.com/BVLC/caffe.git
+```
 
-5.1 首先需要安装`pip`   
+2.10 安装python的pip和easy_install，方便安装软件包（超慢的下载。。。）
 ```
-sudo apt-get install python-pip
+$ sudo wget --no-check-certificate https://bootstrap.pypa.io/ez_setup.py 
+$ sudo python ez_setup.py --insecure
+$ wget https://bootstrap.pypa.io/get-pip.py
+$ sudo python get-pip.py
 ```
-5.2 再下载`caffe`   
-```
-git clone https://github.com/BVLC/caffe.git
-```
-5.3 转到`caffe/python`目录，安装`scipy`   
-```
-cd caffe/python
-sudo apt-get install python-numpy python-scipy python-matplotlib ipython ipython-notebook python-pandas python-sympy python-nose
-```
-最后安装`requirement`里面的包(注意这里需要`root`权限)    
-```
-sudo su
-for req in $(cat requirements.txt); do pip install $req; done
-```
-如果提示报错，一般是缺少必须的包引起的，直接根据提示 `pip install <package-name>`就行了。   
-安装完后退出`root`权限！！！   
 
-## 6. 编译`caffe`  
-6.1 首先修改配置文件，回到caffe目录   
+2.11 安装python依赖(路径根据自己的目录可能要调一下)
+```bash
+$ cd caffe/python
+$ sudo su
+$ for req in $(cat requirements.txt); do pip install $req; done
 ```
-cd ~/caffe
-cp Makefile.config.example Makefile.config
-# 修改配置文件
-gedit Makefile.config
-# 这里仅需修改4处：
+这步安装也有点慢，别急，等会儿，先去干点别的。记得安装完成之后退出`root`用户。
+
+2.12 编辑`caffe`所需的`Makefile`文件，配置
+```bash
+$ cd caffe 
+$ cp Makefile.config.example Makefile.config 
+$ sudo gedit Makefile.config 
+```
+`Makefile.config`里面有依赖库的路径，及各种编译配置,主要作以下修改：
+```bash
 # 1) 使用cuDNN:这里去掉#，取消注释为
 USE_CUDNN := 1 
 # 2) 修改python包目录，这句话
@@ -287,31 +283,37 @@ PYTHON_INCLUDE := /usr/include/python2.7 \
 3) 开启GPU
 4) USE_LMDB := 1；
 ```
-  因为新安装的`python`包目录在这里： `/usr/local/lib/python2.7/dist-packages/`。   
 
-6.2 配置运行环境，调用`CUDA`库，在`/etc/ld.so.conf.d目录`新建`caffe.conf`         
+2.13 配置运行环境，调用`CUDA`库，在`/etc/ld.so.conf.d目录`新建`caffe.conf`,         
 ```bash
 $ sudo gedit /etc/ld.so.conf.d/caffe.conf
 ```
-添加：`/usr/local/cuda/lib64`
-保存退出，执行:
+添加：`/usr/local/cuda/lib64`        
+保存退出，执行:        
 ```bash
 $ sudo ldconfig
 ```
 
-  接下来就好办了，直接`make`   
+2.14 编译`caffe、pycaffe`
+进入`caffe`根目录，          
 ```
-  make all -j4
-  make test
-  make runtest
-  make pycaffe
+$ sudo make -j4
+# 测试一下结果，
+$ sudo make test -j4
+$ sudo make runtest -j4
+(runtest中个别没通过没关系，不影响使用)
+$ sudo make pycaffe -j4
+$ sudo make distribute
 ```
-这时候cd 到caffe 下的 python 目录，试试`caffe`的 `python wrapper`安装好没有：   
-```
-python
->>> import caffe
-```
-如果不报错，那就说明安装好了。   
+## 3. 拿`cifar10`测试下效果
+$cd /home/smith/caffe
+$sudo sh data/cifar10/get_cifar10.sh  （脚本下载速度太慢，找个迅雷下载拷进来，再照脚本解压）
+# sudo sh examples/cifar10/create_cifar10.sh
+# sudo sh examples/cifar10/train_quick.sh
+下面，网络开始初始化、训练了，loss会开始下降，很快的就会出现优化完成。
+
+PS:
+1、尝试了安装opencv3.0.0，可惜失败了，有博客说是cuda8.0版本太新，不支持了，后面有时间再搞了。
 
 
 ## 安装中出现的问题汇总
