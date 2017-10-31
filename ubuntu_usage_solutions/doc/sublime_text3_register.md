@@ -1,27 +1,6 @@
-# sublime
-## 1. sublime 中的设置无法保存
-	表现为打开的工程在关闭sublime之后就没有了；
-	注册好的sublime重新打开之后就恢复到未注册状态。
+# sublime 注册码
 
-原因：
-
-是因为在home目录下，关于sublime配置文件的权限有问题：
-```bash
-$ ls /home/ldd/.config
-总用量 120
-drwx------ 26 ldd  ldd  4096 7月  29 12:06 ./
-drwxr-xr-x 24 ldd  ldd  4096 7月  29 11:41 ../
-...
-drwxr-xr-x  2 root root 4096 7月   8 18:45 gedit/
-...
-drwx------  7 root root 4096 7月  29 13:37 sublime-text-3/
-```
-解决：
-```bash
-$ sudo chown -hR ldd:ldd sublime-text-3 gedit
-```
-
-## 2.最新注册码 
+## 1.最新注册码 
 ```
 —– BEGIN LICENSE —– 
 TwitterInc 
@@ -38,7 +17,8 @@ E36B85CC 84991F19 7575D828 470A92AB
 —— END LICENSE ——
 ```
 
-## 3.注册码 
+## 2.注册码 
+ 以下几个注册码可能无法使用了。
 2.
 ```
 —– BEGIN LICENSE —– 

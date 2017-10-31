@@ -1,4 +1,4 @@
-# ~/.bashrc文件的配置
+# .bashrc文件的配置
 
 ```bash
 

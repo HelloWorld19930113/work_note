@@ -1,6 +1,6 @@
 ## 搭建iTop4412使用的 NFS 环境
 
-## 1. 安装 nfs-kernel-server
+## 1. 安装 nfs-kernel-server        
 
 ```bash
 $ sudo apt-get install nfs-kernel-server
