@@ -25,3 +25,4 @@
 - [21. `Ubuntu 16.04`系统备份和恢复](./doc/system_backup_recover.md)  
 - [22. `system settings`里面选项丢失](./doc/system_setting.md)  
 - [22. `ubuntu`终端闪退](./doc/terminals_crash.md)  
+- [23. `vi`使用教程](./doc/vi_usage.md)  
