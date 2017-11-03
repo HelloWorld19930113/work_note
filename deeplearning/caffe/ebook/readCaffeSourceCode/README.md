@@ -4,6 +4,7 @@
 [2. 梳理`caffe`代码 - `syncedmem`](doc/syncedmem.md)            
 [3. 梳理`caffe`代码 - `blob`](doc/blob.md)         
 [4. 梳理`caffe`代码 - `net`](doc/net.md)            
+[5. 梳理`caffe`代码 - `layer`](doc/layer_.md)            
 
  
 [`caffe`中的约定用法](doc/caffe_base_usage.md)                 

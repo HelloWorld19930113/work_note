@@ -1,7 +1,4 @@
-
-
 ## `LayerParameter`的`proto`定义
-
 // NOTE
 // 当你添加一个新的`LayerParameter field`时一定要更新下一个可用的ID
 //
@@ -106,7 +103,6 @@ message LayerParameter {
 }
 ```
 
-
 ## 获取卷积层
  GetConvolutionLayer()
  根据`engine`是否为`GPU`來获取对应的卷积层(ConvolutionLayer 或 CuDNNConvolutionLayer)。
@@ -131,8 +127,6 @@ shared_ptr<Layer<Dtype> > GetConvolutionLayer(
 ## 获取Pooling, LRN, ReLU, Sigmoid, TanH, Python层
  GetPoolingLayer(), GetLRNLayer(), GetReLULayer(), GetSigmoidLayer(), GetTanHLayer(), GetPythonLayer()
  同样是根据`engine`是否为`GPU`來获取对应的层。
-
-
 ```
 class Layer
 {
