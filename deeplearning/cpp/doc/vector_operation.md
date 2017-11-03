@@ -77,11 +77,11 @@ explicit vector ( size_type n, const T& value= T(), const Allocator& = Allocator
 template <class InputIterator>
 vector ( InputIterator first, InputIterator last, const Allocator& = Allocator() );
 vector ( const vector<T,Allocator>& x );
-```
+
 explicit:是防止隐式转换, Allocator是一种内存分配模式,一般是使用默认的
 ```cpp
 vector<int> A;  //创建一个空的的容器
-vector<int> B(10,100); //创建一个个元素,每个元素值为
+vector<int> B(10,100); //创建一个个元素,每个元素值为100
 vector<int> C(B.begin(),B.end()); //使用迭代器,可以取部分元素创建一个新的容器
 vector<int> D(C); //复制构造函数,创建一个完全一样的容器
 ```
