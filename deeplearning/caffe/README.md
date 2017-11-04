@@ -8,4 +8,4 @@
 ### 1.2 `caffe`学习资料    
 1. [`caffe`源码阅读笔记 - langb](./ebook/readCaffeSourceCode/)    
 2. [学习`caffe`系列 - 徐其华](./ebook/learningCaffe/)     
-3. [更好的使用`caffe`](./ebook/useCaffe/)     
+3. [`caffe`能做什么](./ebook/useCaffe/)     

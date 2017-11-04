@@ -9,6 +9,7 @@
 - [5. `px4` 开源飞控](./px4/)         
 - [6. `ROS`——机器人操作系统](./ros/)       
 - [7. `rtems` 操作系统](./rtems/)         
-- [8. `windows` 系统 `API`](./win_Api/)       
+- [8. `windows` 系统 `API`](./windows_api/)       
 - [9. `MarkDown`使用教程](./markdownUsage/)        
+- [10.`ubuntu`使用教程](./ubuntu_usage_solutions/)        
 

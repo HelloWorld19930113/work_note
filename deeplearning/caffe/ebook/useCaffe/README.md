@@ -2,4 +2,3 @@
 
 1. [`caffe`分类器训练实例](./doc/classifyExample.md)      
 2. [调用`caffe`进行分类的`C++`接口](./doc/howToCallCaffeModelWithCppAPI.md)    
-3. [如何更好的训练网络](./doc/trainModels.md)    
