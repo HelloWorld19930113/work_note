@@ -1,5 +1,7 @@
 # 梳理`caffe`代码 - `layer`
- `Layer`（层）是`Caffe`中最庞大最繁杂的模块。由于`Caffe`强调模块化设计，因此只允许每个`layer`完成一类特定的计算，例如`convolution`操作、`pooling`、`非线性变换`、`内积运算`，以及`数据加载`、`归一化`和`损失计算`等。`layer`这个类可以说是里面最终的一个基本类了，深度网络呢就是一层一层的`layer`，相互之间通过`blob`传输数据连接起来。
+ 
+## `caffe`中的`layers`
+`Layer`(层)是`Caffe`中最庞大最繁杂的模块。由于`Caffe`强调模块化设计，因此只允许每个`layer`完成一类特定的计算，例如`convolution`操作、`pooling`、`非线性变换`、`内积运算`，以及`数据加载`、`归一化`和`损失计算`等。`layer`这个类可以说是里面最终的一个基本类了，深度网络呢就是一层一层的`layer`，相互之间通过`blob`传输数据连接起来。
 
 我们先看一张图：
 
@@ -17,8 +19,9 @@
 `common_layers.hpp`: 继承自父类`Layer`，定义与`中间结果数据变形`、`逐元素操作相关`的子Layer，例如`ConcatLayer`，`InnerProductLayer`和`SoftmaxLayer`等。
 `layer_factory.hpp`: `Layer工厂模式`类，负责维护现有可用layer和相应layer构造方法的`映射表`。
 
-## `layer.hpp`
-和`layer`相关的头文件有：
+## `caffe`中的`layer.hpp`头文件
+
+ 和`layer`相关的头文件有：
 ```cpp
 common_layers.hpp
 data_layers.hpp
@@ -27,13 +30,11 @@ loss_layers.hpp
 neuron_layers.hpp
 vision_layers.hpp
 ```
-其中`layer.hpp`是抽象出来的基类，其他都是在其基础上的继承，也即剩下的五个头文件和上图中的五个部分。在`layer.hpp`头文件里，包含了这几个头文件：
-```
-#include "caffe/blob.hpp"
-#include "caffe/common.hpp"
-#include "caffe/proto/caffe.pb.h"
-#include "caffe/util/device_alternate.hpp"
-```
+其中`layer.hpp`是抽象出来的基类，其他都是在其基础上的继承，也即剩下的五个头文件和上图中的五个部分。
+
+
+
+
 
 在`device_alternate.hpp`中，通过`#ifdef CPU_ONLY`定义了一些宏来`取消GPU的调用`：
 ```cpp
@@ -42,23 +43,32 @@ vision_layers.hpp
 #define STUB_GPU_BACKWARD(classname, funcname)
 ```
 
-`layer`中有这三个主要参数：
+## `layer`中有这三个主要参数：
 ```
-// 这个是protobuf文件中存储的layer参数
-LayerParameter layer_param_;         
-// 这个存储的是layer的参数，在程序中用的
-vector<share_ptr<Blob<Dtype>>> blobs_;        
-// 这个bool表示是否计算各个blob参数的diff，即传播误差
+// 由protobuf格式定义，保存layer参数
+LayerParameter layer_param_;          
+// 以一组blobs表示的可学习参数   
+vector<share_ptr<Blob<Dtype>>> blobs_;          
+// 表示是否计算各个`blob`参数的`diff`，即传播误差    
 vector<bool> param_propagate_down_;        
 ```
-Layer类的构建函数explicit Layer(const LayerParameter& param) : layer_param_(param)会尝试从protobuf文件读取参数。其三个主要接口：
+
+Layer类的构造函数
+```cpp
+explicit Layer(const LayerParameter& param) : layer_param_(param)
+```
+会尝试从`protobuf`文件读取参数。其三个主要接口：
+```cpp
 virtual void SetUp(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top)
 inline Dtype Forward(const vector<Blob<Dtype>*>& bottom, vector<Blob<Dtype>*>* top);
 inline void Backward(const vector<Blob<Dtype>*>& top, const vector<bool>& propagate_down, const <Blob<Dtype>*>* bottom);
+```
+
 SetUp函数需要根据实际的参数设置进行实现，对各种类型的参数初始化；Forward和Backward对应前向计算和反向更新，输入统一都是bottom，输出为top，其中Backward里面有个propagate_down参数，用来表示该Layer是否反向传播参数。
 在Forward和Backward的具体实现里，会根据Caffe::mode()进行对应的操作，即使用cpu或者gpu进行计算，两个都实现了对应的接口Forward_cpu、Forward_gpu和Backward_cpu、Backward_gpu，这些接口都是virtual，具体还是要根据layer的类型进行对应的计算（注意：有些layer并没有GPU计算的实现，所以封装时加入了CPU的计算作为后备）。另外，还实现了ToProto的接口，将Layer的参数写入到protocol buffer文件中。
 data_layers.hpp
 data_layers.hpp这个头文件包含了这几个头文件：
+```cpp
 #include "boost/scoped_ptr.hpp"
 #include "hdf5.h"
 #include "leveldb/db.h"
@@ -70,6 +80,7 @@ data_layers.hpp这个头文件包含了这几个头文件：
 #include "caffe/internal_thread.hpp"
 #include "caffe/layer.hpp"
 #include "caffe/proto/caffe.pb.h"
+```
 看到hdf5、leveldb、lmdb，确实是与具体数据相关了。data_layer作为原始数据的输入层，处于整个网络的最底层，它可以从数据库leveldb、lmdb中读取数据，也可以直接从内存中读取，还可以从hdf5，甚至是原始的图像读入数据。
 关于这几个数据库，简介如下：
 LevelDB是Google公司搞的一个高性能的key/value存储库，调用简单，数据是被Snappy压缩，据说效率很多，可以减少磁盘I/O，具体例子可以看看维基百科。

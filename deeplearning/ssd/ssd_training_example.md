@@ -200,3 +200,17 @@ $ find -name "*.xml" -exec cp {} xxxx/ \;
 $ find -name '*.xml' |xargs perl -pi -e 's|xxx|***|g'
 ```
 
+3. `Argument list too long`
+```bash
+$ find xml/ -name "*.xml" -exec cp {} Annotations/ \;
+$ find jpg/ -name "*.jpg" -exec cp {} JPEGImages/ \;
+```
+
+person
+motorbike
+train
+sofa
+horse
+tvmonitor
+sheep
+pottedplant
