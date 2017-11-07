@@ -237,9 +237,22 @@ $ sudo ldconfig
 ```
 >>>>>>>>>>>>
 
-2.9 拉取caffe源码
+Get the code. We will call the directory that you cloned Caffe into $CAFFE_ROOT
 ```bash
-$ git clone https://github.com/BVLC/caffe.git
+git clone https://github.com/weiliu89/caffe.git
+cd caffe
+git checkout ssd
+```
+Build the code. Please follow Caffe instruction to install all necessary packages and build it.
+```
+# Modify Makefile.config according to your Caffe installation.
+cp Makefile.config.example Makefile.config
+make -j8
+# Make sure to include $CAFFE_ROOT/python to your PYTHONPATH.
+make py
+make test -j8
+# (Optional)
+make runtest -j8
 ```
 
 2.10 安装python的pip和easy_install，方便安装软件包（超慢的下载。。。）
@@ -256,7 +269,7 @@ $ cd caffe/python
 $ sudo su
 $ for req in $(cat requirements.txt); do pip install $req; done
 ```
-这步安装也有点慢，别急，等会儿，先去干点别的 ^_^
+这步安装也有点慢，别急，等会儿，先去干点别的
 安装完成之后退出root用户。
 
 2.12 编辑caffe所需的Makefile文件，配置
@@ -279,35 +292,6 @@ $ sudo gedit /etc/ld.so.conf.d/caffe.conf
 ```bash
 $ sudo ldconfig
 ```
-
-2.13 编译caffe、pycaffe
-进入caffe根目录，
-$sudo make -j4
-  测试一下结果，
-$sudo make test -j4
-$sudo make runtest -j4
-(runtest中个别没通过没关系，不影响使用)
-$sudo make pycaffe -j4
-$sudo make distribute
-第三部分，拿cifar10测试下效果
-$cd /home/smith/caffe
-$sudo sh data/cifar10/get_cifar10.sh  （脚本下载速度太慢，找个迅雷下载拷进来，再照脚本解压）
-# sudo sh examples/cifar10/create_cifar10.sh
-# sudo sh examples/cifar10/train_quick.sh
-下面，网络开始初始化、训练了，loss会开始下降，很快的就会出现优化完成。
-
-
-PS:
-1、尝试了安装opencv3.0.0，可惜失败了，有博客说是cuda8.0版本太新，不支持了，后面有时间再搞了。
-2、
-
-
-
-
-
-
-
-
 
 ## 安装中出现的问题汇总
 
@@ -343,13 +327,18 @@ sudo gedit /usr/include/boost/property_tree/detail/json_parser_read.hpp
 /usr/bin/ld: cannot find -lhdf5
 collect2: error: ld returned 1 exit status
 ```
-这说明连接器找不到`hdf5_hl`和`hdf5`这两个库，没法进行链接。 
-我的解决方案是更改`makefile`:
+Step 1
+在Makefile.config文件的第85行，添加/usr/include/hdf5/serial/ 到 INCLUDE_DIRS，也就是把下面第一行代码改为第二行代码。
 ```
-#LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include
+INCLUDE_DIRS := $(PYTHON_INCLUDE) /usr/local/include /usr/include/hdf5/serial/
+```
+Step 2
+在Makefile文件的第173行，把 hdf5_hl 和hdf5修改为hdf5_serial_hl 和 hdf5_serial，也就是把下面第一行代码改为第二行代码。
+```
+LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_hl hdf5
 LIBRARIES += glog gflags protobuf boost_system boost_filesystem m hdf5_serial_hl hdf5_serial
 ```
-把第一行注释，然后改成第二行的内容就可以了。
 
 3. 训练过程中遇到:`Check failed: error == cudaSuccess (10 vs. 0)  invalid device ordinal`
  是因为GPU个数的原因，枚举设备时候出错。在`ssd_pascal_xxx.py`330行附近，将`gpus = "0,1,2,3,4"`改为`gpus = "0"`;
