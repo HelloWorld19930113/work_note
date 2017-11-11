@@ -11,7 +11,7 @@
 - [2. 训练——知乎专栏](https://zhuanlan.zhihu.com/p/27763696)             
 - [3. 深度机器学习中的batch的大小对学习效果有何影响？](https://www.zhihu.com/question/32673260)             
 6. [算法](./algorithm/)
-
+7. [吴恩达系列课程学习笔记](./Andrew_Ng)
 
 
 

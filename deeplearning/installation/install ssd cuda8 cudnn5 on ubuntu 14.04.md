@@ -381,41 +381,6 @@ caffe make runtest error（core dumped）Check failed: status == CUDNN_STATUS_SU
 
 于是安装了cuda和cudnn加速，make和make test都过了，而make runtest时报错，大概是这样滴错误
 
- 
-
-1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
 <pre name="code" class="plain">[----------] 6 tests from CuDNNConvolutionLayerTest/1, where TypeParam = double
 [ RUN      ] CuDNNConvolutionLayerTest/1.TestSimpleConvolutionGroupCuDNN
 F1014 08:55:30.083176 23568 cudnn_conv_layer.cpp:30] Check failed: status == CUDNN_STATUS_SUCCESS (6 vs. 0)  CUDNN_STATUS_ARCH_MISMATCH
@@ -451,21 +416,30 @@ make: *** [runtest] Aborted (core dumped) caffe::NetTest_TestReshape_Test<>::Tes
 make: *** [runtest] Aborted (core dumped)
 
 
-
- 
-
 在内网找了半天无果，终于在墙外找到了解决办法，不，是问题所在。 因为笔记本上的GT540M的CUDA Capability是2.1,而官方的cudnn加速是不支持3.0以下的版本的，因此只能在Makefile.config中注释掉USE_CUDNN这行，重新执行以下
 
- 
-
- 
-
-1
-2
-3
-4
 make clean
 make all -j4
 make test -j4
 make runtest -j4
 最后除了make runtest中2 DISABLED TESTS之外，没有其他问题。make runtest中出现几个测试例子不过不影响使用
+
+7. libcudart.so.8.0: cannot open shared object file: No such file or directory
+问题描述： 
+error while loading shared libraries: libcudart.so.8.0: cannot open shared object file: No such file or directory
+解决办法：
+首先确认`/etc/profile`中的路径包含了`cuda8.0`的安装路径及相应的库文件
+```bash
+export PATH=$PATH:/usr/local/cuda-8.0/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-8.0/lib64
+export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/cuda-8.0/lib64
+```
+执行`$source /etc/profile`使配置文件生效。
+若仍提示相同的错误，则执行以下命令，将相应的库文件复制到`/usr/lib`
+```bash
+sudo cp /usr/local/cuda-8.0/lib64/libcudart.so.8.0 /usr/local/lib/libcudart.so.8.0 && sudo ldconfig
+sudo cp /usr/local/cuda-8.0/lib64/libcublas.so.8.0 /usr/local/lib/libcublas.so.8.0 && sudo ldconfig
+sudo cp /usr/local/cuda-8.0/lib64/libcurand.so.8.0 /usr/local/lib/libcurand.so.8.0 && sudo ldconfig
+```
+ps. ldconfig命令是一个动态链接库管理命令，是为了让动态链接库为系统共享
+
