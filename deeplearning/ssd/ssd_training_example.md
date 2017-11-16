@@ -23,7 +23,6 @@ make test -j16
 
 我们通过`python lab.py`能够实现对imgs目录下的图片文件做画框操作，然后保存`xml`文件
 下面列出`xml`的主要几个元素，只要满足这几个参数就可以了
-（图片被我归一化到300*300，实际上并不需要完全一样，可以允许不一样的尺寸）
 ```xml
 <annotation>
     <size>
@@ -41,47 +40,23 @@ make test -j16
     </object>
 </annotation>
 ```
-
-3.新建一个目录叫`xwk_st`，里面有文件夹
+(图片被我归一化到300*300，实际上并不需要完全一样，可以允许不一样的尺寸)
+3.在服务器中的`home`目录中有一个`data`目录，这个目录中存放的都是原始的标注数据。我们在这个目录下新建一个`xwk`目录，并新建以下三个文件夹，其中`ImageSets`中包含一个子目录`Main`：
 ```
-Annotations         这个放标注信息文件`xml`的，画框等标记位置信息
-ImageSets           这个放数据集信息相关的，定义训练和测试等
-    -- Main         这里是`ImageSets`的子目录，文件在这里面
-JPEGImages          这里放图片文件的
+Annotations         # 这个放标注信息文件xml的，画框等标记位置信息
+ImageSets/Main      # 数据集相关信息保存在Main子目录，定义训练和测试等
+JPEGImages          # 这里放图片文件的
 ```
-4.拷贝图片
-(1)把`xml`全部复制到`Annotations`里面;
+4.拷贝训练所需的数据文件
+(1)把`.xml`全部复制到`Annotations`里面;
 (2)把`.jpg`复制到`JPEGImages`;
-(3)然后通过一段代码（就是`make-list-file.py`），产生的`trainval.txt`，`test.txt`复制到`ImageSets/Main`目录下;
-其中`make-list-file.py`的内容如下：
-```python
-import os
-import random
-
-trainacc = 0.9
-
-fs = os.listdir("JPEGImages")
-ntrain = int(trainacc * len(fs))
-nval = len(fs) - ntrain
-random.shuffle(fs)
-
-
-with open("trainval.txt", "wb") as tf:
-    for i in range(ntrain):
-        p = fs[i].rfind(".")
-        tf.write(fs[i][:p] + "\n")
-
-
-pos = ntrain
-with open("test.txt", "wb") as tf:
-    for i in range(nval):
-        p = fs[i+pos].rfind(".")
-        tf.write(fs[i+pos][:p] + "\n")
+(3)然后运行`python make-list-file.py`命令，会产生`trainval.txt`和`test.txt`两个文本文件，将这两个文件复制到`ImageSets/Main`目录下;
+5.进入到`{CAFFE_ROOT}/caffe/data`，执行下面的命令：
+```bash
+cp VOC0712/ xwk/ -R
 ```
-5.进入到`caffe/data`，在当前目录下复制一个`VOC0712`为`xwk_st`（这个名字必须跟上面的`xwk_st`一样）
-
-我们打开里边的`labelmap_voc.prototxt`
-修改类别`1`为`st`(这个名字必须跟lab.py里面指定的名字相匹配)
+这样就在该目录下按照`VOC0712`复制得到一个`xwk`(这个名字必须跟上面的`xwk`一样)。
+接下来打开`xwk`目录下的`labelmap_voc.prototxt`，并修改类别`1`为`st`(这个名字必须跟`lab.py`里面指定的名字相匹配，这个名字最终会被保存在xml文件的<name></name>域中)
 ```
 item {
   name: "st"
@@ -89,48 +64,47 @@ item {
   display_name: "st"
 }
 ```
-6.打开`create_list.sh，修改第3行的root_dir指向我们创建的目录上一级（即xwk_st所在目录）
+6.打开`create_list.sh`，作如下修改：
 ```
-root_dir=/home/eric/trainData/
+# 修改第3行的`root_dir`指向我们保存标注数据的目录（即新建`xwk`目录时所在目录）
+root_dir=$HOME/data
 # 修改第13行
-for name in VOC2007 VOC2012  修改为
-for name in xwk_st
+for name in VOC2007 VOC2012  
+# 修改为
+for name in xwk
 ```
-我们打开终端，切换到`caffe`工程所在目录。然后执行创建列表
+在终端中执行`./create_list.sh`创建列表
 ```
-$ cd /home/eric/work/gitwork/ssd/caffe
-$ ./data/xwk_st/create_list.sh
+$ ./create_list.sh
 ```
-可以看到`xwk_st`目录下多了几个文件
-
-7.打开`create_data.sh`，
+可以看到`xwk`目录下多了几个文件。
+7.打开`create_data.sh`，作如下修改：
 ```
 # 修改第7第8行
 data_root_dir="$HOME/data/VOCdevkit"
 dataset_name="VOC0712"
 # 为
-data_root_dir="/hope/userdata/dl/5.ssd/ssd-jc/doc/data"
-dataset_name="xwk_st"
+data_root_dir="$HOME/data"
+dataset_name="xwk"
 ```
 然后在终端执行（caffe目录下跟第6步一样）：
 ```
-$ ./data/xwk_st/create_data.sh
+$ ./create_data.sh
 ```
 哐当，会报错，提示`caffe.proto`:
-我们去`caffe/scripts/create_annoset.py`找到第6行，加入一个路径
+我们去`caffe/scripts/create_annoset.py`找到第6行，加入一个路径(这个路径是`caffe`工程中的`python`目录,可能根据不同的工程目录稍微进行微调):
 ```
-sys.path.insert(0, "/home/eric/work/gitwork/ssd/caffe/python")
+sys.path.insert(0, "$HOME/work/gitwork/caffe/python")
 from caffe.proto import caffe_pb2
 from google.protobuf import text_format
 ```
-再来一遍
+再来一遍：
 ```
-$ ./data/xwk_st/create_data.sh
+$ ./create_data.sh
 ```
 提示：Processed 256 files.完成了
-
-8.我们到`caffe/examples/ssd`里面，复制一个`ssd_pascal.py`，命名`ssd_pascal_xwk_st.py`并打开:
-在头部，我们插入路径
+8.我们到`caffe/examples/ssd`里面，复制`ssd_pascal.py`为`ssd_pascal_xwk.py`，并打开:
+同样的，在文件头部我们插入路径
 ```
 from __future__ import print_function
 import sys
@@ -139,12 +113,12 @@ import caffe
 # 然后修改大约再85行
 train_data = "examples/VOC0712/VOC0712_trainval_lmdb"
 # 为:
-train_data = "/home/eric/data/xwk_st/lmdb/xwk_st_trainval_lmdb"
+train_data = "/home/eric/data/xwk/lmdb/xwk_trainval_lmdb"
 # 然后修改：
 test_data = "examples/VOC0712/VOC0712_test_lmdb"
 # 为
-test_data = "/home/eric/data/xwk_st/lmdb/xwk_st_test_lmdb"
-# 修改大于335行
+test_data = "/home/eric/data/xwk/lmdb/xwk_test_lmdb"
+# 修改大于335行，设置使用的gpu编号
 gpus = "0,1,2,3"，修改为gpus = "0"
 # 修改batch_size为16,在340行左右，当然太大了异常的话自己调整小
 batch_size = 16
@@ -162,30 +136,23 @@ job_dir = "/home/eric/data/jobs"
 # 目录没有需要自己建立的
 # 修改264行左右：
 # Stores the test image names and sizes. Created by data/VOC0712/create_list.sh
-name_size_file = "/home/eric/data/xwk_st/test_name_size.txt"
+name_size_file = "/home/eric/data/xwk/test_name_size.txt"
 # The pretrained model. We use the Fully convolutional reduced (atrous) VGGNet.
 pretrain_model = "/home/eric/data/VGG_ILSVRC_16_layers_fc_reduced.caffemodel"
 # Stores LabelMapItem.
-label_map_file = "data/xwk_st/labelmap_voc.prototxt"
+label_map_file = "data/xwk/labelmap_voc.prototxt"
 # 这个预训练模型下载地址是：http://cs.unc.edu/~wliu/projects/ParseNet/VGG_ILSVRC_16_layers_fc_reduced.caffemodel
 ```
 修改完之后保存退出。
-
-9.终端在caffe目录下，执行：
+9.终端在`caffe`目录下，执行：
 ```
-$ python examples/ssd/ssd_pascal_xwk_st.py
+$ sudo python examples/ssd/ssd_pascal_xwk.py
 ```
 就开始训练啦
-
 10.调用`ssd`模型做识别
-
 目录下的`callssd.py`就是一个简单的演示例子
-
 **注意**
 当你自己训练模型完毕后，从`models`里面复制出来的`deploy.prototxt`文件底部设置了一个指向一个`txt文件`的路径。这个是没有必要的，可以删掉这个参数，可以参照一下目录下面我放的`deploy.prototxt`这个文件。
-
-
-
 ## 问题及解决方案：
 1. 将某个目录下的所有`.jpg`文件复制到某个文件夹
 ```bash
