@@ -154,17 +154,9 @@ $ sudo python examples/ssd/ssd_pascal_xwk.py
 **注意**
 当你自己训练模型完毕后，从`models`里面复制出来的`deploy.prototxt`文件底部设置了一个指向一个`txt文件`的路径。这个是没有必要的，可以删掉这个参数，可以参照一下目录下面我放的`deploy.prototxt`这个文件。
 ## 问题及解决方案：
-1. 将某个目录下的所有`.jpg`文件复制到某个文件夹
-```bash
-$ find -name "*.xml" -exec cp {} xxxx/ \;
-```
--exec 代表继续执行一个命令；
-{} 代表 刚才查找出的结果；
-最后一定要加上“\”
-
 2. 将某个目录下的所有`.xml`文件中的某个字符串`str1`替换为另外字符串`str2`
 ```bash
-$ find -name '*.xml' |xargs perl -pi -e 's|xxx|***|g'
+$ find -name '*.xml' |xargs perl -pi -e 's|<name>st</name>|<name>xwk</name>|g'
 ```
 
 3. `Argument list too long`
@@ -172,6 +164,25 @@ $ find -name '*.xml' |xargs perl -pi -e 's|xxx|***|g'
 $ find xml/ -name "*.xml" -exec cp {} Annotations/ \;
 $ find jpg/ -name "*.jpg" -exec cp {} JPEGImages/ \;
 ```
+4. log
+```bash
+nohup python examples/ssd/ssd_xwk.py > xwk.log 2>&1 &
+```
+
+5. 关闭test 
+```
+#'test_iter': [test_iter],
+#'test_interval': 10000,
+...
+#'test_initialization': False,
+...
+#test_net=[test_net_file],
+```
+
+
+
+
+
 
 person
 motorbike
