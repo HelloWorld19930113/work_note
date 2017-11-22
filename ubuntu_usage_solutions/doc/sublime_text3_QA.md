@@ -27,3 +27,17 @@ $ sudo chown -hR ldd:ldd sublime-text-3 gedit
 2). 在`sublime`中`Package Control: Install Package`搜索安装`IMESupport`        
 
 
+## 3. sublime text3 设置
+```
+{
+	"font_size": 11.0,
+	"ignored_packages":
+	[
+		"Vintage"
+	],
+	"theme": "Soda Dark 3.sublime-theme",
+	"update_check": false,
+	"word_wrap": "auto"
+}
+
+```
