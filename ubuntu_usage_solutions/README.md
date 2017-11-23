@@ -26,6 +26,7 @@
 - [22. `system settings`里面选项丢失](./doc/system_setting.md)  
 - [22. `ubuntu`终端闪退](./doc/terminals_crash.md)  
 - [23. `vi`使用教程](./doc/vi_usage.md)  
+- [24. `pip install`更换源](./doc/pip_install_source.md)  
 
 
 

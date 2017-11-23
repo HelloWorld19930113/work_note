@@ -228,8 +228,8 @@ $ sudo cp include/cudnn.h /usr/local/cuda/include/
 ```bash
 $ cd /usr/local/cuda/lib64/
 $ sudo chmod +r libcudnn.so.5.1.5 
-$ sudo ln -sf libcudnn.so.5.1.5 libcudnn.so.5
 $ sudo ln -sf libcudnn.so.5 libcudnn.so
+$ sudo ln -sf libcudnn.so.5.1.5 libcudnn.so.5
 ```
 更新设置：
 ```bash
