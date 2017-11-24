@@ -7,7 +7,7 @@
 - [3. `ubuntu 14.04`设置程序启动快捷键](./doc/shortcuts.md)  
 - [4. `.bashrc`文件的配置](./doc/bashrc_config.md)  
 - [5. 修改系统默认启动`ubuntu`或`windows`](./doc/default_grub.md)  
-- [6. 常见的`git`命令使用](./doc/git_usage/git.md)  
+- [6. `git`使用`skills`](./doc/git_usage/)  
 - [7. 更改`ubuntu`启动等待时间](./doc/grub_timeout.md)  
 - [8. `ubuntu`安装`Java1.7` ](./doc/java1.7_install.md)  
 - [9. 如何让普通用户访问`/dev/ttyUSB0` ](./doc/minicom_permision.md)  
