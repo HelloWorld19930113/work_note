@@ -1,12 +1,14 @@
 # `CMakeList.txt`文件编写
+`CMake`是一种跨平台编译工具，比`make`更为高级，使用起来要方便得多。`CMake`主要是编写`CMakeLists.txt`文件，然后用`cmake`命令将`CMakeLists.txt`文件转化为make所需要的`Makefile`文件，最后用`make命令`编译源码生成可执行程序或共享库。因此`CMake的编译`基本就两个步骤： `cmake && make `。   
 
-
-
-
-
-
-
-
+`cmake`指向`CMakeLists.txt`所在的目录，例如`cmake ..`表示`CMakeLists.txt`在当前目录的上一级目录。`cmake`后会生成很多编译的中间文件以及`makefile`文件，所以一般建议新建一个新的目录，专门用来编译，例如：    
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+make根据生成makefile文件，编译程序。       
 
 ## 一个`CMakeList.txt`实例
 ```cmake
