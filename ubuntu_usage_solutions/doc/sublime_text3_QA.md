@@ -31,6 +31,7 @@ $ sudo chown -hR ldd:ldd sublime-text-3 gedit
 ```
 {
 	"font_size": 11.0,
+	"font_face": "Courier New bold",
 	"ignored_packages":
 	[
 		"Vintage"

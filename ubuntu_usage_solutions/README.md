@@ -27,8 +27,11 @@
 - [22. `ubuntu`终端闪退](./doc/terminals_crash.md)  
 - [23. `vi`使用教程](./doc/vi_usage.md)  
 - [24. `pip install`更换源](./doc/pip_install_source.md)  
-
-
+- [25. `python-apt`出错](./doc/no_module_named_apt_pkg.md)  
+- [26. `ubuntu ss5 polipo` ](./doc/ss5-polipo_proxy.md)  
+- [27. `sublime_text3`新版本安装 ](./doc/sublime_tex3_new_version_install.md) 
+- [28. `sublime_text3 c++`开发环境搭建和推荐插件](./doc/sublime_tex3_cpp_install.md) 
+- [29. `jupyter-python2.7`安装问题](./doc/jupyter_python2.7_install.md) 
 
 ```ss
 "server": 69.171.73.29
