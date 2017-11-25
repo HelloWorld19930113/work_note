@@ -47,6 +47,9 @@ Annotations         # 这个放标注信息文件xml的，画框等标记位置�
 ImageSets/Main      # 数据集相关信息保存在Main子目录，定义训练和测试等
 JPEGImages          # 这里放图片文件的
 ```
+```bash
+mkdir Annotations ImageSets/Main JPEGImages -p
+```
 4.拷贝训练所需的数据文件
 (1)把`.xml`全部复制到`Annotations`里面;
 (2)把`.jpg`复制到`JPEGImages`;
