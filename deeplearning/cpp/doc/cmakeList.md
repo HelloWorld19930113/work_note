@@ -14,11 +14,21 @@ make根据生成makefile文件，编译程序。
 ```cmake
 # 这是一个测试函数的程序的CMakeLists.txt，"#"后面为注释的内容，CMake的命令全部为大写
 
-# cmake verson，指定cmake版本 
-cmake_minimum_required(VERSION 2.8)
+#设定最小版本号
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # 指定生成的工程名为 ”cmake_test“
 PROJECT(cmake_test)  
+
+# 设置编译器和编译选项
+SET(CMAKE_C_COMPILER g++)
+SET(CMAK_CXX_COMPILER g++)
+# 允许c++11标准、O3优化、多线程。match选项可避免一些cpu上的问题
+SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -march=native -O3 -pthread" )
+
+# 设置用debug还是release模式。debug允许断点，而release更快
+#SET( CMAKE_BUILD_TYPE Debug )
+SET( CMAKE_BUILD_TYPE Release )
 
 # 指定头文件目录为 “include”
 
@@ -48,19 +58,32 @@ ADD_EXECUTABLE(bin/test ${TEST_CMAKE})
 TARGET_LINK_LIBRARIES(bin/test ${LIBRARIES})  
 ```
 以下是不带注释的`CMakeList.txt`文件： 
+
 ```cmake
+CMAKE_MINIMUM_REQUIRED( VERSION 2.8 ) 
+
+#project name  
 PROJECT(cmake_test)  
 
+SET(CMAKE_C_COMPILER g++)
+SET(CMAK_CXX_COMPILER g++)
+SET( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -march=native -O3 -pthread" )
+
+SET( CMAKE_BUILD_TYPE Release )
+
+#head file path  
 INCLUDE_DIRECTORIES(  
 include  
 )  
 
+#source directory  
 AUX_SOURCE_DIRECTORY(src DIR_SRCS)  
 
+#set environment variable  
 SET(TEST_CMAKE 
 ${DIR_SRCS}  
 )  
-
+#set extern libraries  
 SET(LIBRARIES  
 #libm.so  
 )  
@@ -70,6 +93,7 @@ ADD_EXECUTABLE(bin/test ${TEST_CMAKE})
 
 #add link library  
 TARGET_LINK_LIBRARIES(bin/test ${LIBRARIES})  
+
 ```    
 
 
