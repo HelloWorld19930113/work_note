@@ -97,6 +97,8 @@ maxLoc – 指向最大值位置（2维情况）的指针， 如果未指定则�
 mask – 可选的蒙版，用于选择待处理子区域
 ```
 
+
+
 1. 读取图片到一个矩阵中；
 ```cpp
 Mat imread(const string& filename, int flags=1)
