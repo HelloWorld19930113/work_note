@@ -1,7 +1,11 @@
 
+# pycharm project
+.idea
 
+# video file
 *~
 *.avi
 
+# ipython file
 *.ipynb
 .ipynb_checkpoints/

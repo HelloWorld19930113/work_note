@@ -33,6 +33,9 @@
 - [28. `sublime_text3 c++`开发环境搭建和推荐插件](./doc/sublime_tex3_cpp_install.md) 
 - [29. `jupyter-python2.7`安装问题](./doc/jupyter_python2.7_install.md) 
 - [30. `ubuntu`查看内核版本](./doc/ubuntu_kernel_version.md)  
+- [31. `chrome`推送网页内容到`kindle`](./doc/send_chrome_to_kindle.md)  
+
+
 
 ```shadowsocks5
 "server": 69.171.73.29
