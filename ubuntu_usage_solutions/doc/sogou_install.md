@@ -4,7 +4,7 @@
 
 1. 添加`fcitx`的`PPA`    
 ```
-eric@eric-VirtualBox:/etc/apt$ sudo add-apt-repository ppa:fcitx-team/nightly
+$ sudo add-apt-repository ppa:fcitx-team/nightly
 ```
 2. 更新软件源，安装一些依赖软件    
 ```

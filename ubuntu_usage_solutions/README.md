@@ -7,7 +7,7 @@
 - [3. `ubuntu 14.04`设置程序启动快捷键](./doc/shortcuts.md)  
 - [4. `.bashrc`文件的配置](./doc/bashrc_config.md)  
 - [5. 修改系统默认启动`ubuntu`或`windows`](./doc/default_grub.md)  
-- [6. 常见的`git`命令使用](./doc/git.md)  
+- [6. `git`使用`skills`](./doc/git_usage/)  
 - [7. 更改`ubuntu`启动等待时间](./doc/grub_timeout.md)  
 - [8. `ubuntu`安装`Java1.7` ](./doc/java1.7_install.md)  
 - [9. 如何让普通用户访问`/dev/ttyUSB0` ](./doc/minicom_permision.md)  
@@ -26,9 +26,13 @@
 - [22. `system settings`里面选项丢失](./doc/system_setting.md)  
 - [22. `ubuntu`终端闪退](./doc/terminals_crash.md)  
 - [23. `vi`使用教程](./doc/vi_usage.md)  
-- [24. `ubuntu`查看内核版本](./doc/ubuntu_kernel_version.md)  
-
-
+- [24. `pip install`更换源](./doc/pip_install_source.md)  
+- [25. `python-apt`出错](./doc/no_module_named_apt_pkg.md)  
+- [26. `ubuntu ss5 polipo` ](./doc/ss5-polipo_proxy.md)  
+- [27. `sublime_text3`新版本安装 ](./doc/sublime_tex3_new_version_install.md) 
+- [28. `sublime_text3 c++`开发环境搭建和推荐插件](./doc/sublime_tex3_cpp_install.md) 
+- [29. `jupyter-python2.7`安装问题](./doc/jupyter_python2.7_install.md) 
+- [30. `ubuntu`查看内核版本](./doc/ubuntu_kernel_version.md)  
 
 ```shadowsocks5
 "server": 69.171.73.29
