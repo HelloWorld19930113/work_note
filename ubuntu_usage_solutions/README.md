@@ -34,7 +34,7 @@
 - [29. `jupyter-python2.7`安装问题](./doc/jupyter_python2.7_install.md) 
 - [30. `ubuntu`查看内核版本](./doc/ubuntu_kernel_version.md)  
 - [31. `chrome`推送网页内容到`kindle`](./doc/send_chrome_to_kindle.md)  
-
+- [32. 在`virtual box`中安装`windows10`](./doc/install_windows_in_virtualbox.md)  
 
 
 ```shadowsocks5
