@@ -4,25 +4,21 @@
 1. 日志系统的使用区分本地文件和打印信息；
 2. 保证系统配置只进行一次，static；
 
+## 
+ 两个应该是比较重要的`FreezerSide *`变量，`g_leftptr 和 g_rightptr`；
 
 
-## 初始化
-1. 禁用错误输出；
+## initialize()初始化函数
+1. 禁用错误输出`error`；
 2. 创建两个`SyncThread`对象；
-3. 初始化临界区资源锁；
-4. 初始化`Log`系统；
-5. 获取系统配置参数；
+4. 初始化`log`日志系统；
+5. 读取系统配置文件；
 6. 读取商品名和条形码；
-7. 创建一个`MultiFrameShow`类型的`demoFrame`对象；
-8. 创建一个TimerFrameBase对象；
-9. 如果系统配置文件`xxx-config.ini`中包含冰柜的左边和右边的视频，则使用这里的视频。
-10. 两个应该是比较重要的FreezerSide *指针，`g_leftptr 和 g_rightptr`；
+7. 创建一个调试窗口:`MultiFrameShow类型的demoFrame`对象，用于显示`4个摄像头`的图像；
+8. 开启两个冰箱门识别线程
 
-
-## `doOpenDoor()`函数
-  
-该函数中会调用`3个run()`函数；
-
+## `doOpenDoor()`函数   
+该函数中会调用`3个run()`函数；  
 ```cpp
 demoFrame->run("演示窗口", 1);
 g_left->run();
