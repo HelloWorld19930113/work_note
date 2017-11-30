@@ -4,6 +4,10 @@
 #   线性回归
 #   y = 0.1*x + 0.3，显示随机生成的这些点
 #
+#   梯度下降法起作用的现象是每次迭代都会使误差降低。
+#   preliminary screen 初步筛选
+#   coherent 连贯的
+#
 
 
 
@@ -27,7 +31,7 @@ y_data = [v[1] for v in vector_set]
 # plt.legend()
 # plt.show()
 
-# tensorflow implement
+# tensor_flow implement
 W = tf.Variable(tf.random_uniform([1], -1.0, 1.0))
 b = tf.Variable(tf.zeros([1]))
 y = W*x_data + b
@@ -42,10 +46,11 @@ sess.run(init)
 # 训练
 for step in range(8):
     sess.run(train)
-print(sess.run(W), sess.run(b))
+    # print(step,sess.run(W), sess.run(b))
+    print(step,sess.run(loss))
 
 # 绘制结果
-plt.plot(x_data, y_data, 'ro')
+plt.plot(x_data, y_data, 'ro', label='result')
 plt.plot(x_data, sess.run(W)*x_data+sess.run(b))
 plt.legend()
 plt.show()
