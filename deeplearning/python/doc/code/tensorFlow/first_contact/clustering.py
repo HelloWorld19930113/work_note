@@ -1,5 +1,6 @@
 # coding=utf-8
 
+#  k-means 分类
 import numpy as np
 
 
@@ -27,13 +28,28 @@ import seaborn as sns
 import tensorflow as tf
 vectors = tf.constant(vectors_set)
 k = 4
+# 从vector中选取(4,2)维度的数据，size[i]=-1,表示截取该维度的全部数据
 centroides = tf.Variable(tf.slice(tf.random_shuffle(vectors),[0,0], [k,-1]))
+
+print vectors.get_shape()
+print centroides.get_shape()
+
+# 扩展维度为了使两个tensor作subtract
+# shape为1代表tensor在该维度上并未分配大小
+# tensorFlow具有广播特性，所以tf.subtract会自己找到两个tensor的减法方式
+# 它会将不确定的那个维度补全为可以作减法的形式
 expanded_vectors = tf.expand_dims(vectors, 0)
 expanded_centroides = tf.expand_dims(centroides, 1)
+print expanded_vectors.get_shape()
+print expanded_centroides.get_shape()
+
+# reduce_sum是以计算和的形式降维，最后保留第2维度
+diff = tf.subtract(expanded_vectors, expanded_centroides)
+sqr = tf.square(diff)
+distances = tf.reduce_sum(sqr, 2)
+assignments = tf.argmin(distances, 0)
 
 # tf.concat的两个参数位置换了
-distance = tf.reduce_sum(tf.square(tf.subtract(expanded_vectors, expanded_centroides)), 2)
-assignments = tf.argmin(distance, 0)
 
 means = tf.concat([
     tf.reduce_mean(
@@ -41,7 +57,7 @@ means = tf.concat([
                 tf.reshape(
                   tf.where(
                     tf.equal(assignments, c)
-                  ),[1,-1])
+                  ), [1, -1])
                ),reduction_indices=[1])
     for c in xrange(k)], 0)
 

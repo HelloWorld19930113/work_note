@@ -18,5 +18,6 @@
 [1. Learning-OpenCV-3源码](https://github.com/oreillymedia/Learning-OpenCV-3_examples)            
 [2. 图像局部与分割-背景建模](./learningOpencv3/doc/framesAbs.md)           
 
-
+## opencv 2 计算机视觉——编程手册
+[1. 基于形态学运算的图像运算](./cookBook/doc/morphology_transform.md)
 
