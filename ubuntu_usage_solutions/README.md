@@ -35,6 +35,7 @@
 - [30. `ubuntu`查看内核版本](./doc/ubuntu_kernel_version.md)  
 - [31. `chrome`推送网页内容到`kindle`](./doc/send_chrome_to_kindle.md)  
 - [32. 在`virtual box`中安装`windows10`](./doc/install_windows_in_virtualbox.md)  
+- [33. 在`Ubuntu 14.04`安装和使用`Docker`](./doc/docker_install.md)  
 
 
 ```shadowsocks5
