@@ -1,4 +1,3 @@
-
 # pycharm project
 .idea
 
@@ -9,3 +8,27 @@
 # ipython file
 *.ipynb
 .ipynb_checkpoints/
+
+# backup files
+*~
+
+# log files
+*.log
+
+# dot files
+.*
+
+# git
+!.gitignore
+
+# make file
+*~
+*.o
+*.o.d
+core
+*.ko
+*.mod
+*.mod.c
+a.out
+Module.symvers
+modules.order

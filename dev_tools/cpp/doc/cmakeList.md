@@ -88,6 +88,10 @@ SET(LIBRARIES
 #libm.so  
 )  
 
+link_directories(  
+/usr/local/cuda/lib64
+) 
+
 #add executable file  
 ADD_EXECUTABLE(bin/test ${TEST_CMAKE})  
 
