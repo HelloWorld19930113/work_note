@@ -284,7 +284,7 @@ PYTHON_INCLUDE := /usr/include/python2.7 \
 # 改为
 PYTHON_INCLUDE := /usr/include/python2.7 \
 　　/usr/local/lib/python2.7/dist-packages/numpy/core/include
-3) 开启GPU
+3) 开启GPU # CPU_ONLY :=1;
 4) USE_LMDB := 1；
 ```
   因为新安装的`python`包目录在这里： `/usr/local/lib/python2.7/dist-packages/`。   
@@ -299,12 +299,12 @@ $ sudo gedit /etc/ld.so.conf.d/caffe.conf
 $ sudo ldconfig
 ```
 
-  接下来就好办了，直接`make`   
+接下来就好办了，直接`make`:     
 ```
-  make all -j4
-  make test
-  make runtest
-  make pycaffe
+make all -j4
+make test
+make runtest
+make pycaffe
 ```
 这时候cd 到caffe 下的 python 目录，试试`caffe`的 `python wrapper`安装好没有：   
 ```
@@ -446,3 +446,8 @@ make test -j4
 make runtest -j4
 ```
 最后除了make runtest中2 DISABLED TESTS之外，没有其他问题。make runtest中出现几个测试例子不过不影响使用
+4. GPU warning..
+```
+# Suppress the 'compute_20', 'sm_20', and 'sm_21' architectures are deprecated warning
+  list(APPEND Caffe_DEFINITIONS PUBLIC -Wno-deprecated-gpu-targets)
+```
