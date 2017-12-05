@@ -32,15 +32,6 @@ curl -sSL https://get.daocloud.io/daotools/set_mirror.sh | sh -s http://faf41e68
 curl -sSL https://get.daocloud.io/daomonit/install.sh | sh -s a7d911eb0064448e6524a34c6cc3fda1d84bb604 
 sudo service daomonit start 
 ```
-5. 运行`Docker`容器       
-现在可以看到在`Bash Shell`下建立`Ubuntu`容器是非常简单的，只需运行一行命令即可。   
-```
--i选项：让输入输出都在标准控制台进行
--t选项：分配一个tty
-$ docker run -i -t ubuntu:14.04 /bin/bash
-root@696d5fd32bba:/$
-```
-故，在输出提示中，可以看到使用的标准`Ubuntu`容器。现在可以在`Ubuntu`的`Docker`容器中使用`Bash Shell`。如果希望停止/断开连接，可以使用组合键`Ctrl-D`，然后就会返回到早先的窗口。    
 9. `Docker`组    
 创建一个`docker`用户组，避免使用`root`用户，并让`docker`用户组的用户具有同`root`的权限。   
 ```
@@ -53,26 +44,3 @@ $ usermod -aG docker $USER
 $ docker run hello-world
 ```
 快照中输出显示，`docker`用户工作正常。       
-11. `Docker`可用容器      
-`Docker`可用的容器可以通过搜索命令查找，社区已经提供了很多可用的容器。如何寻找可用的`Docker`容器，使用以下命令搜索`CentOS`的`Docker`容器。   
-```
-$ docker search centos
-```
-
-
-使用以下命令创建一个以进程方式运行的容器    
-```
-$ docker run -d ubuntu:14.04 /bin/sh -c "while true; do echo hello world; sleep 1; done"
-```
-可以通过`docker ps`来查看有哪些容器有在运行     
-```
-$ docker ps
-```
-在容器内使用`docker logs`命令，查看容器内的标准输出     
-我们使用`docker stop`命令来停止容器    
-
-
-
-
-
-[1. 部署第一个容器](http://guide.daocloud.io/dcs/3-9152643.html)   
