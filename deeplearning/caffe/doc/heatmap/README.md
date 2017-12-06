@@ -1,7 +1,7 @@
 # 在`caffe`中添加`heatmap`层    
 
 >参考博客：   
-[1. `caffe`添加`PrecisionRecallLosslayer`层](http://blog.csdn.net/langb2014/article/details/50489305#reply)
+[1. `caffe`添加`PrecisionRecallLosslayer`层](http://blog.csdn.net/langb2014/article/details/50489305#reply)    
 [2. `caffe`添加`HeatmapData`层](http://blog.csdn.net/langb2014/article/details/50985804)   
 第二篇博客以[github-caffe heatmap](https://github.com/tpfister/caffe-heatmap)中所实现的`data_heatma.cpp`、`data_heatmap.hpp`、`euclidean_loss_heatmap_layer.hpp`和`euclidean_loss_heatmap_layer.cpp`为例介绍如何写自己的层。  
 
@@ -38,7 +38,7 @@ root_img_dir: "/home/lsn/data/flic_heatmap/"
 ```
 $ sh train_heatmap.sh heatmap-flic-fusion 1 
 ```
-2.4 Supported augmentations
+2.4 Supported augmentations    
 ```
 Random crop, resize, mirror and rotation
 Heatmap params
@@ -63,8 +63,8 @@ dont_flip_first: This option allows you to turn off label mirroring for the firs
 **Notes**
 Ensure that the cropsize is set so that the crop normally covers most of the positions in the image that you wish to regress. E.g. for FLIC we prepared 256x256 cropped input images (cropped as a bounding box around the provided torso point) and used these as input images.    
 
-## Paper
-Please cite our ICCV'15 paper in your publications if this code helps your research:
+## Paper   
+Please cite our ICCV'15 paper in your publications if this code helps your research:    
 ```
 @InProceedings{Pfister15a,
 author       = "Pfister, T. and Charles, J. and Zisserman, A.",
