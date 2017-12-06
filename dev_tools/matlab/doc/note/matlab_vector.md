@@ -66,36 +66,32 @@ c2 = [5; 6; 7; 8 ];
 c = [c1; c2]
 cMat = [c1,c2]
 ```
-4.5 向量的幅值大小   
-具有元素为`[v1，v2，v3，...，vn]`的向量`v`的幅值(大小)由下列公式求出：
-
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=default"></script>
-$$\sqrt{v1^2+v2^2+v3^2+...+vn^2}$$
-
-
-采取以下步骤来计算向量的大小 -
-
-以向量的乘积为单位，使用数组乘法(.*)。产生向量sv，向量sv的元素是向量v的元素的平方。即：sv = v.*v;
-使用sum函数得到向量v的元素的平方和，也称为向量v的点积。即：dp= sum(sv);。
-使用sqrt函数得到和的平方根，也是向量v的大小。即：mag = sqrt(s);
-例子
-
-使用以下代码创建脚本文件 -
-
+4.5 向量的幅值大小    
+具有元素为`[v1，v2，v3，...，vn]`的向量`v`的幅值(大小)由下列公式求出：   
+![](../../pictures/magtitude.png)    
+计算步骤：      
+(1) 以向量的乘积为单位，使用数组乘法`(.*)`产生向量`sv`，向量`sv`的元素是向量`v`的元素的平方。即：`sv = v.*v`;   
+(2) 使用`sum函数`得到向量`v`的元素的平方和，也称为向量v的点积。即：`dp= sum(sv)`;    
+(3) 使用`sqrt`函数得到和的平方根就是向量`v的幅值`。即：`mag = sqrt(s)`;   
+```matlab
 v = [1: 2: 20];
 sv = v.* v;      %the vector with elements 
                  % as square of v's elements
 dp = sum(sv);    % sum of squares -- the dot product
 mag = sqrt(dp);  % magnitude
 disp('Magnitude:'); disp(mag);
-MATLAB
-执行上面示例代码，得到以下结果 -
-
-Magnitude:
- 36.469
-
-
-4.6 向量点积   
-
+```
+4.6 向量点积    
+两个向量`a = (a1，a2，...，an)`和`b = (b1，b2，...，bn)`的点积由下公式计算给出：    
+```
+a.b = ∑(ai.bi)
+```
+使用`dot函数`计算两个向量`a`和`b`的点积。    
+```matlab
+dot(a, b);
+```
 4.7 具有均匀间隔元素的向量   
-
+`MATLAB`可创建具有均匀间隔元素的向量。使用起始元素值`s`，结束元素值`e`，步长`n` 来创建一个向量`v`，可以这样书写：    
+```
+v = [s : n : e]
+```
