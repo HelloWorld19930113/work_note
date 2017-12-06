@@ -19,7 +19,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-int main()
+int main_xxx()
 {
     // Read input image
     cv::Mat image= cv::imread("binary.bmp");
@@ -102,3 +102,12 @@ int main()
     return 0;
 }
 
+
+int main(int argc, char **argv)
+{
+	cv::Mat frame = cv::imread(argv[1]);
+	cv::imshow("demo", frame);
+	cv::waitKey();
+
+	return 0;
+}

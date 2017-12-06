@@ -32,3 +32,6 @@ core
 a.out
 Module.symvers
 modules.order
+
+#cmake
+build/

@@ -45,4 +45,4 @@ switch <switch_expression>
       <statements>
 end
 ```
-**注意**: 这里没有`break`语句。     
+**注意**: `switch`这里没有`break`语句。     

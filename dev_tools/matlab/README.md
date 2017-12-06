@@ -5,6 +5,8 @@
 [2. `MATLAB`基本命令](./doc/note/matlab_commands.md)      
 [3. `MATLAB`数据类型](./doc/note/matlab_dataType.md)      
 [4. `MATLAB`基本运算符](./doc/note/matlab_operator.md)      
+[5. `MATLAB`分支结构](./doc/note/matlab_if_else.md)      
+[6. `MATLAB`循环](./doc/note/matlab_loop.md)      
 
 [7. 几个有用的`ToolBox`](./doc/note/useful_toolboxs.md)    
 
