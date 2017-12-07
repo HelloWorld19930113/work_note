@@ -10,3 +10,4 @@
 [2. 学习 caffe 系列 - 徐其华](./doc/learningCaffe/)     
 [3. caffe 能做什么](./doc/useCaffe/)     
 [4. 在 caffe 中添加 heatmap 层](./doc/heatmap/)     
+[5. 在 caffe 中添加 Weighted_Softmax_Loss 层](./doc/weighted_softmax/)     
