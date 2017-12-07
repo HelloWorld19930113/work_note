@@ -15,6 +15,8 @@
 ## 提高笔记
 [1. asbh20 实例学习](./doc/note/asbhl20.md)  
 [2. 扩展卡尔曼滤波——飞控应用资料_En](./doc/note/kalman_tutorial/EKF_Tutorial.html)    
+[3. aeroblk_HL20 demo](./doc/note/aeroblk_HL20.md)    
+[4. Ideal Airspeed Correction](./doc/note/ideal_airspeed_correction.md)    
 
 ## 代码
 [1. 基于间接卡尔曼滤波的 IMU 与 GPS 融合](./doc/code/Indirect_EKF_IMU_GPS)   
