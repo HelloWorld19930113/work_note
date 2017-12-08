@@ -1,16 +1,14 @@
 # `C++` 笔记
 
 ## 目录
-0. [`C++ Primer 5nd`知识点总结](./doc/c++_primer_5nd.md)       
-1. [`vector`基本操作](./doc/vector_operation.md)      
-2. [`vs2013`使用教程](./doc/vs2013_usage.md)
-3. [`short int`使用注意事项](./doc/shortInt.md)
-4. [`map`使用实例](./doc/map_instance.md)
-5. [`CMakeList.txt`使用实例](./doc/cmakeList.md)
+[1. C++ Primer 5nd 知识点总结](./doc/c++_primer_5nd.md)       
+[2. vector 基本操作](./doc/vector_operation.md)      
+[3. short int 使用注意事项](./doc/shortInt.md)   
+[4. map 使用实例](./doc/map_instance.md)    
+[5. shared_ptr 使用实例](./doc/shared_ptr.md)    
 
-
-
-
+## `VS2013`使用教程
+1. [`vs2013`使用教程](./doc/vs2013_usage.md)   
 
 ## 老杜培训
 1. 结构体中的字节对齐；

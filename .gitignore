@@ -38,3 +38,7 @@ build/
 
 # caffemodels
 caffemodels/
+
+
+# c_blind_clear
+a.out

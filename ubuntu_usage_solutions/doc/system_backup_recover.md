@@ -47,8 +47,7 @@ $ tar vzcpf /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.t
 - (4) 使用bzip2压缩格式（压缩略高，但是速度慢）
 
 ```bash
-$ tar vjcpf /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.tar.bz2
-d --exclude=/proc --exclude=/dev --exclude=/mnt --exclude=/media --exclude=/lost+found --exclude=/cdrom --exclude=/tmp --exclude=/sys --exclude=/home/ldd/.cache --exclude=/run / > /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.log 2> /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.error
+$ tar vjcpf /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.tar.bz2 --exclude=/proc --exclude=/dev --exclude=/mnt --exclude=/media --exclude=/lost+found --exclude=/cdrom --exclude=/tmp --exclude=/sys --exclude=/home/ldd/.cache --exclude=/run  / > /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.log 2> /media/ldd/工作资料/ubuntu_img_backup/ubuntu_`date +%Y%m%d_%H`.error
 ```
 
 ## 3. 恢复系统
