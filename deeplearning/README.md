@@ -7,6 +7,7 @@
 [1. 吴恩达系列课程学习笔记](./Andrew_Ng)   
 [2. `caffe` 笔记](./caffe/)   
 [3. `tensorflow` 笔记](./tensorflow/)   
+[4. `ssd 到 caffe` 笔记](./caffe_to_ssd/)    
 
 ## 深度学习实践--`training skills`   
 [1. 如何更好的训练网络](./train/trainModels.md)   
