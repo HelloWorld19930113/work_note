@@ -21,8 +21,6 @@ BlockingQueue<Batch<Dtype>*> prefetch_full_;
 
 
 
-
-
 ## DataLayerSetUp()      
 只是对数据的shape进行调整，包括`data`和`label`。
 
