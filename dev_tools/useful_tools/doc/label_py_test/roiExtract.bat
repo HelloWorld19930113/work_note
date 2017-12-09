@@ -1,0 +1,2 @@
+python extractRoiWithXml.py
+pause;

@@ -1,19 +1,18 @@
 # caffe 训练一个自己的分类器
 
-1.下载附件里面的数据
+> 分类器中的图片是`Bbox`，文件夹的名称就是类别。caffe  
 
-2.下载附件里面把图片目录标签处理的文件`make-label.py`
-
-3.运行 `make-label.py`
+## 1. 下载附件里面的数据
+## 2. 下载附件里面把图片目录标签处理的文件`make-label.py`
+## 3. 运行 [make-label.py](make-label.py)  
 `cmd`中切换到`make-label.py`的存放目录后运行:
 ```
 $ python make-label.py test
 ```
-这时候就会生产这个三个文件`xxx-train.txt,xxx-val.txt,xxx-labels.txt`
+这时候就会生产这个三个文件`xxx-train.txt, xxx-val.txt, xxx-labels.txt`     
 
-4.找个训练网络这里用的alexNet 
-
-5.新建一个convert-imageset.bat文件
+## 4.找个训练网络这里用的alexNet 
+## 5.新建一个convert-imageset.bat文件
 ```
 H:\program\caffe\caffe-master\Build\x64\Release\convert_imageset ./ test-val.txt val-lmdb --resize_width=200 --resize_height=200
 H:\program\caffe\caffe-master\Build\x64\Release\convert_imageset ./ test-train.txt train-lmdb --resize_width=200 --resize_height=200
