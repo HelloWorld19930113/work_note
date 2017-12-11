@@ -1,6 +1,6 @@
 # caffe 训练一个自己的分类器
 
-> 本目录下使用的网络是resnet-18 和resnet-101。   
+> 
 > 分类器中的图片是`Bbox`，文件夹的名称就是类别。   
 
 ## 1. 下载附件里面的数据
@@ -18,7 +18,8 @@ H:\program\caffe\caffe-master\Build\x64\Release\convert_imageset ./ test-val.txt
 H:\program\caffe\caffe-master\Build\x64\Release\convert_imageset ./ test-train.txt train-lmdb --resize_width=200 --resize_height=200 --shuffle=true
 H:\program\caffe\caffe-master\Build\x64\Release\compute_image_mean train-lmdb mean.binaryproto
 ```
-## 6.修改网络参数
+
+第六步.修改网络参数
 ```
 solver.prototxt
 net: "train_val.prototxt"
@@ -111,9 +112,10 @@ layer {
 ```
 把`fc8`层的`num_output`修改为我们的类别数，只有两类
 
-## 7. 新建一个`train.bat`
+第七步新建一个`train.bat`
 ```
 H:\program\caffe\caffe-master\Build\x64\Release\caffe train --solver=solver.prototxt
 ```
-然后运行`train.bat`就开始训练了就是这么`so easy`。 
+
+然后运行`train.bat`就开始训练了就是这么`so easy`。
 

@@ -155,7 +155,7 @@ $ sudo python examples/ssd/ssd_pascal_xwk.py
 ## 问题及解决方案：
 1. 以下命令将`jst0330_002194`字符串替换为`jst`。    
 ```
-$ find Annotations/ -name '*.xml' |xargs perl -pi -e 's|<name>jst[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]</name>|<name>jst</name>|g
+$ find Annotations/ -name '*.xml' |xargs perl -pi -e 's|<name>jst[0-9][0-9][0-9][0-9]_[0-9][0-9][0-9][0-9][0-9][0-9]</name>|<name>jst</name>|g'
 ```
 2. 将某个目录下的所有`.xml`文件中的某个字符串`str1`替换为另外字符串`str2`。   
 ```bash
