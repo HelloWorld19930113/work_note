@@ -153,11 +153,17 @@ git pull origin master     #从github更新
  其中，`name`表示你在上一步给它起的名字，`branch`表示某一个分支。      
 11. connect to host github.com port 22: Connection timed out                
  访问`github.com`超时。    
-```$ ssh git@github.com 
+```
+$ ssh git@github.com 
 ssh: connect to host github.com port 22: Connection timed out
 ```
-
-**解决办法(windows/linux 通用)**：    
+**解决办法(windows/linux 通用)**：
+11.1 修改源地址协议    
+```
+git config --local -e
+```
+将`url = git@github.com:username/repo.git`改为`url = https://github.com/username/repo.git`，然后保存，再次执行。    
+11.2 添加一个配置文件       
  在`.ssh`目录下创建一个`config`文件，输入如下内容：   
 ```
 Host github.com 
@@ -167,7 +173,7 @@ PreferredAuthentications publickey
 IdentityFile C:/Users/Administrator/.ssh/id_rsa 
 Port 443 
 ```
-注意修改你的邮箱，保存并关闭    
+注意修改你的邮箱，保存并关闭.      
 
 进行测试是否连接上`github.com`      
 ```
