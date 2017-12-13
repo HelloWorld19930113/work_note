@@ -9,4 +9,4 @@
 - [5. 自动控制原理](./auto_control_system/)       
 - [6. `linux driver`](./linux_driver/)      
 - [7. `rtems` 操作系统](./rtems/)         
-- [8. `work plan`](./work_plan/)        
+- [8. `work plan`](./work_plan/)  
