@@ -186,4 +186,19 @@ Please type ‘yes’ or ‘no’: yes
 Warning: Permanently added ‘[ssh.github.com]:443,[207.97.227.248]:443’ (RSA) to the list of known hosts. 
 Hi gzj2013! You've successfully authenticated, but GitHub does not provide shell access. 
 ```
-出现`Hi xxx!……`表示连接成功。        
+出现`Hi xxx!……`表示连接成功。  
+12. `https`方式每次都要输入密码
+按照如下设置即可输入一次就不用再手输入密码的困扰而且又享受https带来的极速。       
+12.1 设置记住密码（默认15分钟）：   
+```
+git config --global credential.helper cache
+```
+如果想自己设置时间，可以这样做：    
+```
+git config credential.helper 'cache --timeout=3600'
+```
+这样就设置一个小时之后失效。   
+12.2 长期存储密码   
+```
+git config --global credential.helper store
+```
