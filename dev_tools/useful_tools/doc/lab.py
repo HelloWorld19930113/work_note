@@ -84,6 +84,65 @@ def loadObjs(name):
             obs.append((d, e, c))
     return cls, obs
 
+def loadObjsFromXml(name):
+    if not os.path.exists(name):
+        return 0, []
+
+    obs = []
+    cls = 0
+    with open(name, "r") as txt:
+        info = txt.readline().split(",")
+        num = int(info[0])
+        cls = int(info[1])
+        for i in range(num):
+            info = txt.readline().split(",")
+            d = (int(info[0]), int(info[1]))
+            e = (int(info[2]), int(info[3]))
+            c = int(info[4])
+            obs.append((d, e, c))
+    return cls, obs
+
+def loadROI(path):
+    # per=ET.parse('testXml.xml')  
+    # path = path + '.xml'
+    print path
+    per=ET.parse(path) 
+
+    roi = []
+    rois = []
+    colStart = 0
+    colEnd = 0
+    rowStart = 0
+    rowEnd = 0 
+    class_name = []
+
+    name_node = per.getiterator("name") 
+    for name in name_node:
+        print "node.text:%s" % name.text   
+        class_name.append(name.text)
+
+    lst_node = per.getiterator("bndbox")  
+    for oneper in lst_node:  #找出person节点  
+        for child in oneper.getchildren(): #找出person节点的子节点  
+            
+            if child.tag == 'xmin':
+                colStart = int(child.text)
+            elif child.tag == 'ymin':
+                colEnd = int(child.text)
+            elif child.tag == 'xmax':
+                rowStart = int(child.text)
+            elif child.tag == 'ymax':
+                rowEnd = int(child.text)
+
+            roi=[[colStart, colEnd],[rowStart,rowEnd]] # 此时只考虑了一个框
+        
+        rois.append(roi)
+        # print roi[0][0],roi[0][1],roi[1][0],roi[1][1], type(roi)
+    print len(rois), len(class_name)
+    if len(rois) == len(class_name):
+        return rois, class_name
+        
+
 def saveBreakpoint(bkp):
     with open("breakpoint.txt", "w") as p:
         p.write("%d" % bkp)
@@ -153,7 +212,8 @@ while True:
     cach = cv2.imread(imgs[i][1])
     cach2 = cv2.imread(imgs[i][1])
     pos = imgs[i][0].rfind(".")
-    currentClass, objs = loadObjs("%s/%s.xml.txt" %(path, imgs[i][0][:pos]))
+    # currentClass, objs = loadObjs("%s/%s.xml.txt" %(path, imgs[i][0][:pos]))
+    currentClass, objs = loadObjsFromXml("%s/%s.xml" %(path, imgs[i][0][:pos]))
     waitSecDown = False
 
     while True:
