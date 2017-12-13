@@ -180,8 +180,6 @@ nohup python examples/ssd/ssd_xwk.py > xwk.log 2>&1 &
 #test_net=[test_net_file],
 ```
 
-
-
 person
 motorbike
 train
