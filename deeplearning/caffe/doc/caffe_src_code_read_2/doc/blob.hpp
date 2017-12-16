@@ -293,14 +293,14 @@ class Blob {
  protected:
   // data_ 指针，data主要是正向传播的时候用的;指针类型是shared_ptr，属于boost库的一个智能指针  
   shared_ptr<SyncedMemory> data_;  
-  // diff_主要用来存储偏差，update data
+  // diff_ 主要用来存储偏差，update data
   shared_ptr<SyncedMemory> diff_;
   shared_ptr<SyncedMemory> shape_data_;
-  // shape_存储Blob的形状  
+  // shape_ 存储Blob的形状  
   vector<int> shape_;
-  // count_表示Blob中的元素个数，也就是 n*n*h*w 中的 n  
+  // count_ 表示 Blob 占用的内存空间大小，也就是 n*n*h*w 的乘积  
   int count_;
-  // capacity表示当前的元素个数，因为Blob可能会reshape  
+  // capacity_ 表示当前的元素个数，因为Blob可能会reshape  
   int capacity_;
 
   DISABLE_COPY_AND_ASSIGN(Blob);

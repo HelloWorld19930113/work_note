@@ -94,11 +94,14 @@ protected:
 	string name_;
 	/// @brief The phase: TRAIN or TEST
 	Phase phase_;
-	/// @brief Individual layers in the net
+
+	/// @brief net 中的每一个 layer
 	vector<shared_ptr<Layer<Dtype> > > layers_;
+
 	vector<string> layer_names_;
 	map<string, int> layer_names_index_;
-	vector<bool> layer_need_backward_;
+	vector<bool> layer_need_backward_;  // 需要进行反向传播的层
+	
 	/// @brief the blobs storing intermediate results between the layer.
 	vector<shared_ptr<Blob<Dtype> > > blobs_;
 	vector<string> blob_names_;
@@ -122,14 +125,17 @@ protected:
 	vector<string> param_display_names_;
 	vector<pair<int, int> > param_layer_indices_;
 	map<string, int> param_names_index_;
-	/// blob indices for the input and the output of the net
+
+	/// Net 输入和输出的 blob indices 
 	vector<int> net_input_blob_indices_;
 	vector<int> net_output_blob_indices_;
 	vector<Blob<Dtype>*> net_input_blobs_;
 	vector<Blob<Dtype>*> net_output_blobs_;
-	/// The parameters in the network.
+
+	/// network 的参数 .
 	vector<shared_ptr<Blob<Dtype> > > params_;
 	vector<Blob<Dtype>*> learnable_params_;
+
 	/**
 	* The mapping from params_ -> learnable_params_: we have
 	* learnable_param_ids_.size() == params_.size(),
@@ -155,4 +161,13 @@ protected:
 	vector<Callback*> after_backward_;
 ```
 
+
+## 5. 总结   
+5.1 prototxt文件是在哪里读取的？    
+```cpp
+// 从文件解析参数到 NetParameter proto message.
+void ReadNetParamsFromTextFileOrDie(const string& param_file,
+                                    NetParameter* param);
+```
+`ReadNetParamsFromTextFileOrDie()` 函数调用 `ReadProtoFromTextFile()` 从`.prototxt` 文本文件中读取参数到 `NetParameter` 中。   
 
