@@ -50,18 +50,30 @@ message PriorBoxParameter {
 }
 ```
 
-
-
 ## 3. TODO 不懂   
 1. num_priors_ (即 len(aspect_ratio))   
 ```cpp
 // num_priors_ = 6;这里很重要，不然就只有5个，和论文中的6个就不相符了
 num_priors_ += 1;   
 ```
-2. 
+2. prior box 中心点的确定  
 ```cpp
 // 这里和 Faster RCNN 一样，就是把 feature map 上的点映射回原图   
 // 这里加上 offset_( = 0.5) 也是为了四舍五入，和 faster rcnn python 代码类似  
 float center_x = (w + offset_) * step_w;   
 float center_y = (h + offset_) * step_h;
+```
+3. min_size 和 max_size 的作用?     
+min_size 和 max_size 是指 prior box 的最小尺寸和最大尺寸.而且这两个尺寸是必须被指定的. 他们两个分别确定了 first prior box(aspect_ratio = 1, size = min_size) 和 second prior box(aspect_ratio = 1, size = sqrt(min_size * max_size)). 其余的 prior box 由 aspect ratio 确定(box_width = min_size_ * sqrt(ar), box_height = min_size_ / sqrt(ar)).   
+到这里，所有的prior_box选取完成，共6个比例，每一层都会设置一个min_size.    
+4. 
+// 设置 variance 值.  
+// 解答： https://github.com/weiliu89/caffe/issues/75  
+// 除以variance是对预测box和真实box的误差进行放大，从而增加loss，增大梯度，加快收敛。  
+// 另外，top_data += top[0]->offset(0, 1); 已经使指针指向新的地址，所以 variance 不会覆盖前面的结果。  
+```
+top_data += top[0]->offset(0, 1); // 这里我猜是指向了下一个chanel
+if (variance_.size() == 1) {
+	caffe_set<Dtype>(dim, Dtype(variance_[0]), top_data);
+}
 ```
