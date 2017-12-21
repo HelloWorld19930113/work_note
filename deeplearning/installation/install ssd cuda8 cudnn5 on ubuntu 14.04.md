@@ -63,19 +63,19 @@ $ sudo ./cuda_8.0.44_linux.run
 Do you accept the previously read EULA?
 accept/decline/quit: accept
 
-Install NVIDIA Accelerated Graphics Driver for Linux-x86_64 361.62?
-(y)es/(n)o/(q)uit: n
-Install the CUDA 8.0 Toolkit?
-(y)es/(n)o/(q)uit: y
-Enter Toolkit Location
-[ default is /usr/local/cuda-8.0 ]:
-Do you want to install a symbolic link at /usr/local/cuda?
-(y)es/(n)o/(q)uit: y
-Install the CUDA 8.0 Samples?
-(y)es/(n)o/(q)uit: y
-Enter CUDA Samples Location
-[ default is /home/zhou ]:
-Installing the CUDA Toolkit in /usr/local/cuda-8.0 …
+Install NVIDIA Accelerated Graphics Driver for Linux-x86_64 361.62?   
+(y)es/(n)o/(q)uit: n   
+Install the CUDA 8.0 Toolkit?   
+(y)es/(n)o/(q)uit: y   
+Enter Toolkit Location   
+[ default is /usr/local/cuda-8.0 ]:   
+Do you want to install a symbolic link at /usr/local/cuda?   
+(y)es/(n)o/(q)uit: y   
+Install the CUDA 8.0 Samples?   
+(y)es/(n)o/(q)uit: y  
+Enter CUDA Samples Location   
+[ default is /home/zhou ]:   
+Installing the CUDA Toolkit in /usr/local/cuda-8.0 …   
 
 完成后看到
 ```
